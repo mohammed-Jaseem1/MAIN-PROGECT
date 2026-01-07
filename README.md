@@ -1,1 +1,7 @@
-# MAIN-PROGECT
+The PSC Model Exam Preparation System is a digital platform developed to enhance the examination preparedness of students appearing for Public Service Commission (PSC) examinations. Competitive examinations such as PSC demand consistent practice, accurate evaluation, and continuous performance analysis. However, traditional exam preparation methods followed in many coaching institutions rely heavily on printed question papers and manual assessment, which limits timely feedback and personalized learning.
+
+This system aims to overcome these limitations by providing a centralized online environment for conducting PSC-oriented model examinations. It supports students from 10th, 12th, and Degree levels and enables them to practice model exams based on previous year PSC question papers under time-bound conditions similar to real examinations. By simulating the actual exam environment, the system helps students improve time management, accuracy, and confidence.
+
+In addition to online examination facilities, the PSC Model Exam Preparation System incorporates automated evaluation and performance analysis. The system identifies weak subjects and topics based on student responses and provides personalized, topic-focused study notes. This intelligent feedback mechanism supports targeted learning and helps students improve their performance in subsequent examinations.
+
+The platform also assists teachers and administrators by simplifying exam management, question paper creation, and student performance tracking. Through assessment automation, performance analysis, and AI-assisted learning support, the proposed system modernizes the traditional exam preparation process and promotes effective, personalized learning for PSC aspirants.
