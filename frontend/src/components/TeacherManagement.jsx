@@ -1,5 +1,5 @@
 // TeacherManagement.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom'; // Add this import
 import './style/TeacherManagement.css';
 
@@ -8,9 +8,7 @@ const TeacherManagement = () => {
   const [selectedDepartment, setSelectedDepartment] = useState('All Departments');
   const [selectedStatus, setSelectedStatus] = useState('Status');
   const [selectedSubject, setSelectedSubject] = useState('ALL SUBJECTS');
-  const [teachers, setTeachers] = useState([
-    
-  ]);
+  const [teachers, setTeachers] = useState([]);
   const navigate = useNavigate(); // Add this line
 
   const subjects = ['ALL SUBJECTS', '', 'HUMANITIES', '', 'PHYSICAL ED'];
@@ -25,6 +23,25 @@ const TeacherManagement = () => {
     engagementRate: '',
     urgentRequirements: '',
   };
+
+  useEffect(() => {
+    fetch('/api/teacher')
+      .then(res => res.json())
+      .then(data => {
+        // Map backend fields to frontend expected fields
+        const mappedTeachers = data.map(teacher => ({
+          id: teacher._id,
+          name: teacher.firstName + ' ' + teacher.lastName,
+          email: teacher.email,
+          subject: teacher.subjects && teacher.subjects.length > 0 ? teacher.subjects.join(', ') : '',
+          department: teacher.department || '', // You may need to add department to your model
+          status: teacher.status || 'ACTIVE', // You may need to add status to your model
+          avatarColor: '#3b82f6', // Or generate based on name
+        }));
+        setTeachers(mappedTeachers);
+      })
+      .catch(err => console.error('Error fetching teachers:', err));
+  }, []);
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);

@@ -111,6 +111,10 @@ const Admindash = () => {
   };
 
   const handleQuickAction = (action) => {
+    if (action === 'Student Management') {
+      navigate('/student-management');
+      return;
+    }
     if (action === 'Teacher Management') {
       navigate('/teacher-management');
       return;
@@ -168,6 +172,7 @@ const Admindash = () => {
                   py: 1.5,
                 }}
                 fullWidth
+                onClick={() => handleSidebarNav(item.label)}
               >
                 {item.label}
               </Button>

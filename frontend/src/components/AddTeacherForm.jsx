@@ -20,12 +20,12 @@ const AddTeacherForm = () => {
     // Account Setup
     username: '',
     password: '',
-    confirmPassword: '',
   });
 
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [phoneFocused, setPhoneFocused] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -68,21 +68,27 @@ const AddTeacherForm = () => {
     if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
     if (!formData.email.trim()) newErrors.email = 'Email is required';
     else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email is invalid';
-    
-    if (!formData.phone.trim()) newErrors.phone = 'Phone number is required';
+
+    // Phone validation: +91, starts with 9/8/7, 10 digits (robust)
+    const phoneRaw = formData.phone.trim();
+    const phone = phoneRaw.replace(/[-\s()]/g, '');
+    // Debug: log processed phone and regex result
+    console.log('Phone input:', formData.phone, 'Processed:', phone, 'Regex test:', /^\+91[987]\d{9}$/.test(phone));
+    if (!phone) {
+      newErrors.phone = 'Phone number is required';
+    } else if (!/^\+91[987]\d{9}$/.test(phone)) {
+      newErrors.phone = 'Phone must start with +91 and be a valid 10-digit number starting with 9, 8, or 7';
+    }
+
     if (!formData.joiningDate) newErrors.joiningDate = 'Joining date is required';
-    
+
     if (!formData.qualifications.trim()) newErrors.qualifications = 'Qualifications are required';
-    
+
     // Account setup validation
     if (!formData.username.trim()) newErrors.username = 'Username is required';
     if (!formData.password) newErrors.password = 'Password is required';
     else if (formData.password.length < 8) newErrors.password = 'Password must be at least 8 characters';
-    
-    if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
-    }
-    
+
     return newErrors;
   };
 
@@ -136,7 +142,6 @@ const AddTeacherForm = () => {
         qualifications: '',
         username: '',
         password: '',
-        confirmPassword: '',
       });
     } catch (error) {
       console.error('Error adding teacher:', error);
@@ -157,10 +162,8 @@ const AddTeacherForm = () => {
 
   return (
     <div className="add-teacher-container">
-      <div className="form-header">
-        <h1>Add New Teacher</h1>
-        <p className="form-subtitle">Register a new faculty member into the school management system.</p>
-      </div>
+      {/* Replace the header with a single heading */}
+      <h1>Registration</h1>
 
       <form onSubmit={handleSubmit} className="teacher-form">
         {/* Personal Information Section */}
@@ -179,7 +182,7 @@ const AddTeacherForm = () => {
                 name="firstName"
                 value={formData.firstName}
                 onChange={handleChange}
-                placeholder="Johnathan"
+                placeholder=""
                 className={errors.firstName ? 'error' : ''}
               />
               {errors.firstName && <span className="error-message">{errors.firstName}</span>}
@@ -193,7 +196,7 @@ const AddTeacherForm = () => {
                 name="lastName"
                 value={formData.lastName}
                 onChange={handleChange}
-                placeholder="Smith"
+                placeholder=""
                 className={errors.lastName ? 'error' : ''}
               />
               {errors.lastName && <span className="error-message">{errors.lastName}</span>}
@@ -208,7 +211,7 @@ const AddTeacherForm = () => {
               name="email"
               value={formData.email}
               onChange={handleChange}
-              placeholder="john.smith@school.edu"
+              placeholder=""
               className={errors.email ? 'error' : ''}
             />
             {errors.email && <span className="error-message">{errors.email}</span>}
@@ -223,9 +226,16 @@ const AddTeacherForm = () => {
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
-                placeholder="+1 (555) 000-0000"
+                onFocus={() => setPhoneFocused(true)}
+                onBlur={() => setPhoneFocused(false)}
+                placeholder=""
                 className={errors.phone ? 'error' : ''}
               />
+              {phoneFocused && (
+                <span className="helper-text" style={{ color: '#888', fontSize: '0.9em' }}>
+                  Format: +91 followed by 10 digits starting with 9, 8, or 7 (e.g., +919876543210)
+                </span>
+              )}
               {errors.phone && <span className="error-message">{errors.phone}</span>}
             </div>
 
@@ -315,7 +325,7 @@ const AddTeacherForm = () => {
               name="qualifications"
               value={formData.qualifications}
               onChange={handleChange}
-              placeholder="Ph.D. in Applied Mathematics from University of Education"
+              placeholder=""
               rows="3"
               className={errors.qualifications ? 'error' : ''}
             />
@@ -338,7 +348,7 @@ const AddTeacherForm = () => {
               name="username"
               value={formData.username}
               onChange={handleChange}
-              placeholder="john.smith"
+              placeholder=""
               className={errors.username ? 'error' : ''}
             />
             {errors.username && <span className="error-message">{errors.username}</span>}
@@ -354,7 +364,7 @@ const AddTeacherForm = () => {
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  placeholder="Enter password"
+                  placeholder=""
                   className={errors.password ? 'error' : ''}
                 />
                 <button 
@@ -366,29 +376,6 @@ const AddTeacherForm = () => {
                 </button>
               </div>
               {errors.password && <span className="error-message">{errors.password}</span>}
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="confirmPassword">Confirm Password</label>
-              <div className="password-input-container">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  placeholder="Confirm password"
-                  className={errors.confirmPassword ? 'error' : ''}
-                />
-                <button 
-                  type="button" 
-                  className="toggle-password-btn"
-                  onClick={togglePasswordVisibility}
-                >
-                  {showPassword ? '👁' : '👁'}
-                </button>
-              </div>
-              {errors.confirmPassword && <span className="error-message">{errors.confirmPassword}</span>}
             </div>
           </div>
         </section>

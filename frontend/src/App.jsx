@@ -7,6 +7,9 @@ import AddTeacherForm from './components/AddTeacherForm.jsx';
 import Teacherdashborad from './components/Teacherdashborad.jsx';
 import Questionpapermanagent from './components/Questionpapermanagent.jsx';
 import ManageExams from './components/ManageExams.jsx';
+import Studentmanagement from './components/Studentmanagement.jsx';
+import AddStudent from './components/Addstudent.jsx';
+import StudentDashboard from './components/Studentdashboard.jsx';
 import './App.css';
 
 import reactLogo from './assets/react.svg';
@@ -24,6 +27,9 @@ function App() {
         <Route path="/teacher-dashboard" element={<Teacherdashborad />} />
         <Route path="/question-paper-management" element={<Questionpapermanagent />} />
         <Route path="/manage-exams" element={<ManageExams />} />
+        <Route path="/student-management" element={<Studentmanagement />} />
+        <Route path="/add-student" element={<AddStudent />} />
+        <Route path="/student-dashboard" element={<StudentDashboard />} />
       </Routes>
     </Router>
   );

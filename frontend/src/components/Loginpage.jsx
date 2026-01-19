@@ -9,15 +9,21 @@ function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [msg, setMsg] = useState("");
-  const [isTeacher, setIsTeacher] = useState(false); // NEW
+  const [isTeacher, setIsTeacher] = useState(false);
+  const [isStudent, setIsStudent] = useState(false); // NEW
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setMsg("");
     try {
-      const url = isTeacher
-        ? "http://localhost:5000/api/teacher/login"
-        : "http://localhost:5000/api/auth/login";
+      let url;
+      if (isTeacher) {
+        url = "http://localhost:5000/api/teacher/login";
+      } else if (isStudent) {
+        url = "http://localhost:5000/api/student/login"; // Student login endpoint
+      } else {
+        url = "http://localhost:5000/api/auth/login";
+      }
       const res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -27,7 +33,13 @@ function Login() {
       if (res.ok) {
         setMsg("Login successful!");
         setTimeout(() => {
-          navigate(isTeacher ? "/teacher-dashboard" : "/admin");
+          if (isTeacher) {
+            navigate("/teacher-dashboard");
+          } else if (isStudent) {
+            navigate("/student-dashboard"); // Student dashboard route
+          } else {
+            navigate("/admin");
+          }
         }, 800);
       } else {
         setMsg(data.error || "Login failed");
@@ -127,6 +139,15 @@ function Login() {
                 style={{ marginRight: 8 }}
               />
               Login as Teacher
+            </label>
+            <label style={{ marginLeft: 16 }}>
+              <input
+                type="checkbox"
+                checked={isStudent}
+                onChange={() => setIsStudent((v) => !v)}
+                style={{ marginRight: 8 }}
+              />
+              Login as Student
             </label>
           </div>
 

@@ -27,5 +27,8 @@ app.use('/api/teacher', teacherRoutes);
 const teacherAuthRoutes = require('./routes/teacherAuth');
 app.use('/api/teacher', teacherAuthRoutes);
 
+const studentRoutes = require('./routes/student');
+app.use('/api/student', studentRoutes); // Handles /api/student/login
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
