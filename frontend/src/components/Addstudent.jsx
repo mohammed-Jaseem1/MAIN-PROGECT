@@ -84,6 +84,31 @@ function AddStudent() {
 
   return (
     <div className="add-student-container">
+      {/* Back Button */}
+      <button
+        type="button"
+        className="back-btn"
+        style={{
+          position: 'absolute',
+          top: 24,
+          left: 32,
+          background: '#2563eb',
+          color: '#fff',
+          border: 'none',
+          borderRadius: '6px',
+          padding: '8px 18px',
+          cursor: 'pointer',
+          fontWeight: 600,
+          zIndex: 10,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px'
+        }}
+        onClick={() => window.history.back()}
+      >
+        <span className="material-symbols-outlined">arrow_back</span>
+        Back
+      </button>
       {/* Header */}
       <header className="header">
         <div className="header-left">
@@ -127,15 +152,6 @@ function AddStudent() {
           <p className="subtitle">Fill in the details below to create a new student account and assign them to a batch.</p>
         </div>
 
-        <button
-          type="button"
-          className="back-btn"
-          style={{ marginBottom: '16px', background: '#050505', border: 'none', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
-          onClick={() => window.history.back()}
-        >
-          <span className="material-symbols-outlined">arrow_back</span>
-          Back
-        </button>
         <form className="student-form" onSubmit={handleSubmit}>
           {/* Account Information Section */}
           <div className="form-section">

@@ -26,6 +26,8 @@ const AddTeacherForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [phoneFocused, setPhoneFocused] = useState(false);
+  // Add success message state
+  const [successMsg, setSuccessMsg] = useState("");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -129,7 +131,7 @@ const AddTeacherForm = () => {
       }
 
       setIsSubmitting(false);
-      alert('Teacher added successfully!');
+      // Custom success message instead of alert
       setFormData({
         firstName: '',
         lastName: '',
@@ -143,6 +145,10 @@ const AddTeacherForm = () => {
         username: '',
         password: '',
       });
+      setErrors({});
+      // Show custom success message
+      setSuccessMsg("Teacher registered successfully! 🎉");
+      setTimeout(() => setSuccessMsg(""), 3000);
     } catch (error) {
       console.error('Error adding teacher:', error);
       setIsSubmitting(false);
@@ -162,10 +168,63 @@ const AddTeacherForm = () => {
 
   return (
     <div className="add-teacher-container">
-      {/* Replace the header with a single heading */}
-      <h1>Registration</h1>
+      {/* Back Button */}
+      <button
+        className="back-btn"
+        onClick={() => window.history.back()}
+        style={{
+          position: "absolute",
+          top: 24,
+          left: 32,
+          background: "#2563eb",
+          color: "#fff",
+          border: "none",
+          borderRadius: "6px",
+          padding: "8px 18px",
+          cursor: "pointer",
+          fontWeight: 600,
+          zIndex: 10,
+        }}
+        aria-label="Back"
+      >
+        ← Back
+      </button>
 
-      <form onSubmit={handleSubmit} className="teacher-form">
+      {/* Replace the header with a single heading */}
+      <h1 style={{ marginTop: 64 }}>Registration</h1>
+
+      <form
+        onSubmit={handleSubmit}
+        className="teacher-form"
+        style={{
+          border: "1px solid #e5e7eb",
+          borderRadius: "12px",
+          maxWidth: "1000px",
+          margin: "32px auto",
+          padding: "32px",
+          background: "#fff",
+          boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
+          position: "relative"
+        }}
+      >
+        {/* Show custom success message */}
+        {successMsg && (
+          <div
+            style={{
+              marginBottom: 18,
+              padding: "12px",
+              background: "#e0f7fa",
+              color: "#2563eb",
+              borderRadius: "8px",
+              textAlign: "center",
+              fontWeight: 600,
+              fontSize: "1.1em",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
+            }}
+          >
+            {successMsg}
+          </div>
+        )}
         {/* Personal Information Section */}
         <section className="form-section">
           <div className="section-header">
@@ -248,6 +307,7 @@ const AddTeacherForm = () => {
                 value={formData.joiningDate}
                 onChange={handleChange}
                 className={errors.joiningDate ? 'error' : ''}
+                max={new Date().toISOString().split('T')[0]}
               />
               {errors.joiningDate && <span className="error-message">{errors.joiningDate}</span>}
             </div>
@@ -404,6 +464,24 @@ const AddTeacherForm = () => {
             )}
           </button>
         </div>
+        {/* Show custom success message at the bottom */}
+        {successMsg && (
+          <div
+            style={{
+              marginTop: 28,
+              padding: "12px",
+              background: "#e0f7fa",
+              color: "#2563eb",
+              borderRadius: "8px",
+              textAlign: "center",
+              fontWeight: 600,
+              fontSize: "1.1em",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
+            }}
+          >
+            {successMsg}
+          </div>
+        )}
       </form>
     </div>
   );

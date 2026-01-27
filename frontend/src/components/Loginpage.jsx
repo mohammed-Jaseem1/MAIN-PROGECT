@@ -128,7 +128,8 @@ function Login() {
             </span>
           </div>
 
-          <div className="login-forgot">Forgot password?</div>
+          {/* Add spacing below password input */}
+          <div style={{ height: 50 }}></div>
 
           <div style={{ marginBottom: 12 }}>
             <label>

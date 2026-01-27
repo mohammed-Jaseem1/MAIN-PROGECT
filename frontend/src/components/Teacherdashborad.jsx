@@ -7,10 +7,8 @@ const Teacherdashborad = () => {
   const [upcomingClasses, setUpcomingClasses] = useState([]);
   const navigate = useNavigate();
 
-  const handleGradeUpdate = (id, newGrade) => {
-    setSubmissions(submissions.map(sub => 
-      sub.id === id ? { ...sub, grade: newGrade } : sub
-    ));
+  const handleLogout = () => {
+    navigate('/login');
   };
 
   const getStatusClass = (status) => {
@@ -107,6 +105,23 @@ const Teacherdashborad = () => {
                 <span className="link-text">Analytics</span>
               </button>
             </div>
+            <button
+              className="logout-btn"
+              onClick={handleLogout}
+              style={{
+                marginTop: 32,
+                width: "100%",
+                background: "#2563eb",
+                color: "#fff",
+                border: "none",
+                borderRadius: "6px",
+                padding: "12px 0",
+                cursor: "pointer",
+                fontWeight: 600,
+              }}
+            >
+              Logout
+            </button>
           </section>
         </div>
 

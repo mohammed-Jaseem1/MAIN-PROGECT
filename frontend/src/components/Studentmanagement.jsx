@@ -8,6 +8,12 @@ function StudentManagement() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // New state for stats
+  const [stats, setStats] = useState({
+    total: 0,
+    activeToday: 0,
+  });
+
   useEffect(() => {
     const fetchStudents = async () => {
       try {
@@ -15,6 +21,19 @@ function StudentManagement() {
         if (!res.ok) throw new Error('Failed to fetch students');
         const data = await res.json();
         setStudents(data);
+
+        // Calculate stats
+        const total = data.length;
+        // Assuming 'last_active' is a date string or timestamp in each student object
+        const today = new Date().toISOString().slice(0, 10);
+        const activeToday = data.filter(
+          s =>
+            s.account_status &&
+            s.last_active &&
+            s.last_active.slice(0, 10) === today
+        ).length;
+
+        setStats({ total, activeToday });
       } catch (err) {
         setError(err.message);
       } finally {
@@ -59,6 +78,27 @@ function StudentManagement() {
 
       {/* Main Content */}
       <main className="main-content">
+        {/* Back Button */}
+        <button
+          className="back-btn"
+          onClick={() => navigate(-1)}
+          style={{
+            position: "absolute",
+            top: 24,
+            left: 32,
+            background: "#2563eb",
+            color: "#fff",
+            border: "none",
+            borderRadius: "6px",
+            padding: "8px 18px",
+            cursor: "pointer",
+            fontWeight: 600,
+            zIndex: 10,
+          }}
+          aria-label="Back"
+        >
+          ← Back
+        </button>
         {/* Page Title Area */}
         <div className="page-title-area">
           <div>
@@ -81,7 +121,9 @@ function StudentManagement() {
               <span className="stat-label">TOTAL STUDENTS</span>
               <span className="material-symbols-outlined stat-icon">groups</span>
             </div>
-            <div className="stat-value">{/* Dynamic value */}</div>
+            <div className="stat-value">
+              {loading ? '...' : stats.total}
+            </div>
             <div className="stat-change positive">
               <span className="material-symbols-outlined">trending_up</span>
               {/* Dynamic change info */}
@@ -92,7 +134,9 @@ function StudentManagement() {
               <span className="stat-label">ACTIVE TODAY</span>
               <span className="material-symbols-outlined stat-icon">bolt</span>
             </div>
-            <div className="stat-value">{/* Dynamic value */}</div>
+            <div className="stat-value">
+              {loading ? '...' : stats.activeToday}
+            </div>
             <div className="stat-meta">{/* Dynamic engagement info */}</div>
           </div>
           <div className="stat-card">

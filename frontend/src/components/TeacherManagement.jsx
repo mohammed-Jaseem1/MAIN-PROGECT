@@ -11,7 +11,7 @@ const TeacherManagement = () => {
   const [teachers, setTeachers] = useState([]);
   const navigate = useNavigate(); // Add this line
 
-  const subjects = ['ALL SUBJECTS', '', 'HUMANITIES', '', 'PHYSICAL ED'];
+  const subjects = ['ALL SUBJECTS', 'GENERAL KNOWLEDGE', 'MATHS', , 'ENGLISH'];
   const departments = ['All Departments', 'Science & Logic Dept', 'Humanities Dept', 'Arts Dept', 'Physical Education Dept'];
   const statuses = ['Status', 'ACTIVE', 'ON LEAVE', 'INACTIVE', 'PENDING'];
 
@@ -123,6 +123,28 @@ const TeacherManagement = () => {
       </aside>
 
       <div className="main-content">
+        {/* Back Button */}
+        <button
+          className="back-btn"
+          onClick={() => navigate(-1)}
+          style={{
+            position: "absolute",
+            top: 24,
+            left: 32,
+            background: "#2563eb",
+            color: "#fff",
+            border: "none",
+            borderRadius: "6px",
+            padding: "8px 18px",
+            cursor: "pointer",
+            fontWeight: 600,
+            zIndex: 10,
+          }}
+          aria-label="Back"
+        >
+          ← Back
+        </button>
+
         {/* Page Header */}
         <div className="page-header">
           <h1>Teacher Management</h1>

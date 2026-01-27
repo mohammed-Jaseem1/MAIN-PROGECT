@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom'; // Add this import
 import './style/StudentDashboard.css';
 
 function StudentDashboard() {
   const [activeNav, setActiveNav] = useState('dashboard');
+  const [user, setUser] = useState({ name: '' }); // Add user state
   const navigate = useNavigate(); // Add this line
 
   const navItems = [
@@ -54,6 +55,27 @@ function StudentDashboard() {
   const notifications = [
 
   ];
+
+  useEffect(() => {
+    // Fetch user info from backend or localStorage
+    const fetchUser = async () => {
+      try {
+        const res = await fetch('http://localhost:5000/api/student/me', {
+          credentials: 'include',
+        });
+        if (res.ok) {
+          const data = await res.json();
+          // Fix: Use correct property for name
+          setUser({ name: data.full_name || data.name || data.username || 'Student' });
+        } else {
+          setUser({ name: 'Student' });
+        }
+      } catch {
+        setUser({ name: 'Student' });
+      }
+    };
+    fetchUser();
+  }, []);
 
   const handleLogout = () => {
     // Clear session/auth data if any (e.g., localStorage, cookies)
@@ -107,7 +129,7 @@ function StudentDashboard() {
           <div className="user-profile">
             <div className="user-avatar"></div>
             <div className="user-info">
-              <h3>Alex Johnson</h3>
+              <h3>{user.name}</h3>
               <p>CS Senior</p>
             </div>
           </div>
@@ -124,7 +146,7 @@ function StudentDashboard() {
           {/* Page Heading */}
           <div className="page-header">
             <div className="header-text">
-              <h1>Good morning, Alex.</h1>
+              <h1>Good morning, {user.name}.</h1>
               <p>You have 2 exams today. Keep up the great work!</p>
             </div>
             <button className="schedule-btn" onClick={handleViewSchedule}>

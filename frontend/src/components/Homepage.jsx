@@ -10,10 +10,7 @@ function Home() {
         <div className="logo">🎓 EduFlow</div>
 
         <ul className="nav-links">
-          <li>Solutions</li>
-          <li>Resources</li>
-          <li>About Us</li>
-          <li>Contact</li>
+          {/* Removed Solutions, Resources, About Us, Contact */}
         </ul>
 
         <button className="cta-btn" onClick={() => navigate('/login')}>Start Learning</button>

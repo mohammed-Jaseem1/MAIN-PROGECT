@@ -1,5 +1,5 @@
 // Admindash.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Grid,
@@ -67,26 +67,87 @@ const Admindash = () => {
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
   const navigate = useNavigate();
 
-  // Sample data for charts
-  // const userActivityData = [
-  //   { day: 'Mon', users: 420 },
-  //   { day: 'Tue', users: 380 },
-  //   { day: 'Wed', users: 510 },
-  //   { day: 'Thu', users: 480 },
-  //   { day: 'Fri', users: 550 },
-  //   { day: 'Sat', users: 400 },
-  //   { day: 'Sun', users: 350 },
-  // ];
+  // Add state for recent registrations
+  const [registrationData, setRegistrationData] = useState([]);
 
-  const registrationData = [
-   
-  ];
+  // Add state for stats
+  const [stats, setStats] = useState({
+    totalLearners: 0,
+    activeInstructors: 0,
+  });
 
+  useEffect(() => {
+    // Fetch recent students and teachers
+    const fetchRecentRegistrations = async () => {
+      try {
+        // Fetch students
+        const studentRes = await fetch('http://localhost:5000/api/student/recent');
+        const students = studentRes.ok ? await studentRes.json() : [];
+        // Fetch teachers
+        const teacherRes = await fetch('http://localhost:5000/api/teacher/recent');
+        const teachers = teacherRes.ok ? await teacherRes.json() : [];
+
+        // Normalize and combine
+        const studentMapped = students.map(s => ({
+          id: s._id || s.student_id,
+          name: s.full_name,
+          email: s.email,
+          date: s.createdAt ? new Date(s.createdAt).toLocaleDateString() : '',
+          role: 'Student',
+          status: s.account_status ? 'active' : 'inactive',
+        }));
+        const teacherMapped = teachers.map(t => ({
+          id: t._id,
+          name: `${t.firstName} ${t.lastName}`,
+          email: t.email,
+          date: t.createdAt ? new Date(t.createdAt).toLocaleDateString() : '',
+          role: 'Teacher',
+          status: t.status && t.status.toLowerCase() === 'active' ? 'active' : 'inactive',
+        }));
+
+        // Sort by date descending, show latest 6
+        const combined = [...studentMapped, ...teacherMapped]
+          .sort((a, b) => new Date(b.date) - new Date(a.date))
+          .slice(0, 6);
+
+        setRegistrationData(combined);
+      } catch {
+        setRegistrationData([]);
+      }
+    };
+
+    // Fetch stats for learners and instructors
+    const fetchStats = async () => {
+      try {
+        // Fetch all students
+        const studentRes = await fetch('http://localhost:5000/api/student');
+        const students = studentRes.ok ? await studentRes.json() : [];
+        // Fetch all teachers
+        const teacherRes = await fetch('http://localhost:5000/api/teacher');
+        const teachers = teacherRes.ok ? await teacherRes.json() : [];
+
+        setStats({
+          totalLearners: students.length,
+          activeInstructors: teachers.filter(t =>
+            t.status && t.status.toLowerCase() === 'active'
+          ).length,
+        });
+      } catch {
+        setStats({
+          totalLearners: 0,
+          activeInstructors: 0,
+        });
+      }
+    };
+
+    fetchRecentRegistrations();
+    fetchStats();
+  }, []);
+
+  // Use fetched stats in statsData
   const statsData = [
-    { id: 1, title: 'Total Learners', value: '', icon: <PeopleIcon />, change: '', color: theme.palette.primary.main },
-    { id: 2, title: 'Active Instructors', value: '', icon: <PersonIcon />, change: '', color: theme.palette.success.main },
-    { id: 3, title: 'Hours Streamed', value: '', icon: <AccessTimeIcon />, change: '', color: theme.palette.info.main },
-    { id: 4, title: 'Pending Approvals', value: '', icon: <PendingActionsIcon />, change: 'Needs Review', color: theme.palette.warning.main },
+    { id: 1, title: 'Total Learners', value: stats.totalLearners, icon: <PeopleIcon />, change: '', color: theme.palette.primary.main },
+    { id: 2, title: 'Active Instructors', value: stats.activeInstructors, icon: <PersonIcon />, change: '', color: theme.palette.success.main },
   ];
 
   const quickActions = [
@@ -121,6 +182,11 @@ const Admindash = () => {
     }
     console.log(`Action: ${action}`);
     // Implement action logic here
+  };
+
+  const handleLogout = () => {
+    // Implement logout logic here (e.g., clear tokens, redirect)
+    navigate('/login');
   };
 
   return (
@@ -207,6 +273,22 @@ const Admindash = () => {
               <MoreVertIcon />
             </IconButton>
           </Box>
+          {/* Logout Button */}
+          <Button
+            variant="outlined"
+            color="error"
+            startIcon={<LogoutIcon />}
+            onClick={handleLogout}
+            sx={{
+              mt: 2,
+              width: '100%',
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 600,
+            }}
+          >
+            Logout
+          </Button>
         </Box>
       </Paper>
 
@@ -366,62 +448,62 @@ const Admindash = () => {
                   </Box>
 
                   <List sx={{ pt: 0 }}>
-                    {registrationData.map((user) => (
-                      <React.Fragment key={user.id}>
-                        <ListItem
-                          sx={{
-                            px: 0,
-                            py: 2,
-                            '&:hover': { bgcolor: 'action.hover' },
-                          }}
-                        >
-                          <ListItemAvatar>
-                            <Avatar sx={{ bgcolor: 'primary.light' }}>
-                              {user.name.charAt(0)}
-                            </Avatar>
-                          </ListItemAvatar>
-                          <ListItemText
-                            primary={
-                              <Typography variant="subtitle2" fontWeight="medium">
-                                {user.name}
-                              </Typography>
-                            }
-                            secondary={
-                              <>
-                                <Typography variant="caption" display="block" color="text.secondary">
-                                  {user.email}
+                    {registrationData.length === 0 ? (
+                      <Typography color="text.secondary" sx={{ px: 2, py: 2 }}>
+                        No recent registrations found.
+                      </Typography>
+                    ) : (
+                      registrationData.map((user) => (
+                        <React.Fragment key={user.id}>
+                          <ListItem
+                            sx={{
+                              px: 0,
+                              py: 2,
+                              '&:hover': { bgcolor: 'action.hover' },
+                            }}
+                          >
+                            <ListItemAvatar>
+                              <Avatar sx={{ bgcolor: user.role === 'Teacher' ? 'secondary.light' : 'primary.light' }}>
+                                {user.name?.charAt(0)}
+                              </Avatar>
+                            </ListItemAvatar>
+                            <ListItemText
+                              primary={
+                                <Typography variant="subtitle2" fontWeight="medium">
+                                  {user.name}
                                 </Typography>
-                                <Typography variant="caption" display="block" color="text.secondary">
-                                  {user.date}
-                                </Typography>
-                              </>
-                            }
-                          />
-                          <Box sx={{ textAlign: 'right' }}>
-                            <Chip
-                              label={user.role}
-                              size="small"
-                              color={
-                                user.role === 'Instructor'
-                                  ? 'primary'
-                                  : user.role === 'Admin'
-                                  ? 'secondary'
-                                  : 'default'
                               }
-                              sx={{ mb: 1 }}
+                              secondary={
+                                <>
+                                  <Typography variant="caption" display="block" color="text.secondary">
+                                    {user.email}
+                                  </Typography>
+                                  <Typography variant="caption" display="block" color="text.secondary">
+                                    {user.date}
+                                  </Typography>
+                                </>
+                              }
                             />
-                            <br />
-                            <Chip
-                              label={user.status}
-                              size="small"
-                              color={user.status === 'active' ? 'success' : 'warning'}
-                              variant="outlined"
-                            />
-                          </Box>
-                        </ListItem>
-                        <Divider />
-                      </React.Fragment>
-                    ))}
+                            <Box sx={{ textAlign: 'right' }}>
+                              <Chip
+                                label={user.role}
+                                size="small"
+                                color={user.role === 'Teacher' ? 'secondary' : 'primary'}
+                                sx={{ mb: 1 }}
+                              />
+                              <br />
+                              <Chip
+                                label={user.status}
+                                size="small"
+                                color={user.status === 'active' ? 'success' : 'warning'}
+                                variant="outlined"
+                              />
+                            </Box>
+                          </ListItem>
+                          <Divider />
+                        </React.Fragment>
+                      ))
+                    )}
                   </List>
                 </CardContent>
               </Card>
