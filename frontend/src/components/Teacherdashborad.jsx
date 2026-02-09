@@ -1,215 +1,328 @@
 import React, { useState } from 'react';
-import './style/Teacherdashboard.css';
+import {
+  Box,
+  Grid,
+  Typography,
+  Card,
+  CardContent,
+  Avatar,
+  Button,
+  Paper,
+  Stack,
+  Divider,
+  Chip,
+  List,
+  ListItem,
+  ListItemAvatar,
+  ListItemText,
+  alpha
+} from '@mui/material';
+
+import {
+  School,
+  Assignment,
+  Quiz,
+  Logout,
+  Dashboard,
+  People
+} from '@mui/icons-material';
+
 import { useNavigate } from 'react-router-dom';
 
-const Teacherdashborad = () => {
+const cardStyle = {
+  borderRadius: 4,
+  boxShadow: '0px 10px 30px rgba(0,0,0,0.04)',
+  transition: '0.2s',
+  '&:hover': {
+    transform: 'translateY(-4px)',
+    boxShadow: '0px 20px 40px rgba(0,0,0,0.08)',
+  },
+};
+
+const Teacherdashboard = () => {
+
   const [submissions, setSubmissions] = useState([]);
   const [upcomingClasses, setUpcomingClasses] = useState([]);
+
   const navigate = useNavigate();
 
   const handleLogout = () => {
     navigate('/login');
   };
 
-  const getStatusClass = (status) => {
-    switch (status) {
-      case 'Submitted': return 'status-submitted';
-      case 'Graded': return 'status-graded';
-      case 'Pending': return 'status-pending';
-      default: return '';
-    }
+  const getStatusColor = (status) => {
+    if (status === 'Submitted') return '#f59e0b';
+    if (status === 'Graded') return '#10b981';
+    return '#6366f1';
   };
 
   return (
-    <div className="dashboard-container">
-      <header className="dashboard-header">
-        <h1>Teacher Dashboard</h1>
-        <div className="header-info">
-          <span className="date">{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
-        </div>
-      </header>
+    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#f3f4f6' }}>
 
-      <div className="dashboard-content">
-        <div className="left-panel">
-          <section className="upcoming-classes card">
-            <h2>Upcoming Classes</h2>
-            
-            <div className="class-section">
-              <h3 className="section-title">
-                <span className="icon">📄</span>
-                Question Papers
-              </h3>
-              {upcomingClasses.filter(c => c.type === 'question-paper').length > 0 ? (
-                <ul className="class-list">
-                  {upcomingClasses.filter(c => c.type === 'question-paper').map(cls => (
-                    <li key={cls.id} className="class-item">
-                      <div className="class-info">
-                        <strong>{cls.title}</strong>
-                        <span>{cls.date} at {cls.time}</span>
-                      </div>
-                      <button className="btn-settings">Settings</button>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="no-data">No upcoming question papers scheduled</p>
-              )}
-            </div>
+      {/* Sidebar on the left */}
+      <Paper
+        elevation={0}
+        sx={{
+          width: 240,
+          bgcolor: '#1e293b',
+          color: 'white',
+          p: 3,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          position: 'fixed', // Fix sidebar to the left
+          left: 0,
+          top: 0,
+          bottom: 0,
+          height: '100vh',
+          zIndex: 1000
+        }}
+      >
 
-            <div className="class-section">
-              <h3 className="section-title">
-                <span className="icon">📝</span>
-                Exams
-              </h3>
-              {upcomingClasses.filter(c => c.type === 'exam').length > 0 ? (
-                <ul className="class-list">
-                  {upcomingClasses.filter(c => c.type === 'exam').map(cls => (
-                    <li key={cls.id} className="class-item">
-                      <div className="class-info">
-                        <strong>{cls.title}</strong>
-                        <span>{cls.date} at {cls.time}</span>
-                      </div>
-                      <button className="btn-settings">Settings</button>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="no-data">No upcoming exams scheduled</p>
-              )}
-            </div>
-          </section>
+        <Box>
+          <Stack direction="row" spacing={2} alignItems="center" mb={5}>
+            <Avatar sx={{ bgcolor: 'primary.main' }}>
+              <School />
+            </Avatar>
+            <Typography fontWeight="bold">Teacher Panel</Typography>
+          </Stack>
 
-          <section className="quick-links card">
-            <h2>Quick Links</h2>
-            <div className="links-grid">
-              <button
-                className="link-card"
-                onClick={() => navigate('/question-paper-management')}
-              >
-                <span className="link-icon">📋</span>
-                <span className="link-text">Manage Question Papers</span>
-              </button>
-              <button
-                className="link-card"
-                onClick={() => navigate('/manage-exams')}
-              >
-                <span className="link-icon">📊</span>
-                <span className="link-text">Manage Exams</span>
-              </button>
-              <button className="link-card">
-                <span className="link-icon">👨‍🎓</span>
-                <span className="link-text">Student Roster</span>
-              </button>
-              <button className="link-card">
-                <span className="link-icon">📈</span>
-                <span className="link-text">Analytics</span>
-              </button>
-            </div>
-            <button
-              className="logout-btn"
-              onClick={handleLogout}
-              style={{
-                marginTop: 32,
-                width: "100%",
-                background: "#2563eb",
-                color: "#fff",
-                border: "none",
-                borderRadius: "6px",
-                padding: "12px 0",
-                cursor: "pointer",
-                fontWeight: 600,
-              }}
+          <Stack spacing={1}>
+
+            <Button
+              startIcon={<Dashboard />}
+              sx={{ color: 'white', justifyContent: 'flex-start' }}
             >
-              Logout
-            </button>
-          </section>
-        </div>
+              Dashboard
+            </Button>
 
-        <div className="right-panel">
-          <section className="recent-submissions card">
-            <div className="submissions-header">
-              <h2>Recent Submissions</h2>
-              <span className="submission-count">{submissions.length} total</span>
-            </div>
-            
-            <div className="table-container">
-              <table className="submissions-table">
-                <thead>
-                  <tr>
-                    <th>Student</th>
-                    <th>Assignment</th>
-                    <th>Status</th>
-                    <th>Grade</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {submissions.map(submission => (
-                    <tr key={submission.id}>
-                      <td className="student-cell">
-                        <div className="student-avatar">
+            <Button
+              startIcon={<Assignment />}
+              sx={{ color: 'white', justifyContent: 'flex-start' }}
+              onClick={() => navigate('/question-paper-management')}
+            >
+              Question Papers
+            </Button>
+
+            <Button
+              startIcon={<Quiz />}
+              sx={{ color: 'white', justifyContent: 'flex-start' }}
+              onClick={() => navigate('/manage-exams')}
+            >
+              Exams
+            </Button>
+
+            <Button
+              startIcon={<People />}
+              sx={{ color: 'white', justifyContent: 'flex-start' }}
+            >
+              Students
+            </Button>
+
+            <Button
+              startIcon={
+                <span className="material-symbols-outlined" style={{ fontSize: 22 }}>notifications</span>
+              }
+              sx={{ color: 'white', justifyContent: 'flex-start' }}
+              onClick={() => navigate('/teacher-notifications')}
+            >
+              Notifications
+            </Button>
+
+          </Stack>
+        </Box>
+
+        <Button
+          startIcon={<Logout />}
+          variant="contained"
+          color="error"
+          onClick={handleLogout}
+        >
+          Logout
+        </Button>
+
+      </Paper>
+
+      {/* Main content, with left margin to accommodate sidebar */}
+      <Box sx={{ flex: 1, p: 4, ml: '240px', position: 'relative' }}>
+
+        {/* HEADER */}
+        <Typography variant="h4" fontWeight="bold" mb={4}>
+          Teacher Dashboard
+        </Typography>
+
+        {/* ===== Cards for Upcoming Exams, To Grade, Graded (left side, spaced) ===== */}
+        <Box sx={{ display: 'flex', gap: 3, mb: 4 }}>
+          <Card sx={{ ...cardStyle, minWidth: 220 }}>
+            <CardContent>
+              <Typography color="text.secondary">
+                Upcoming Exams
+              </Typography>
+              <Typography variant="h4" fontWeight="bold">
+                {upcomingClasses.length}
+              </Typography>
+            </CardContent>
+          </Card>
+          <Card sx={{ ...cardStyle, minWidth: 220 }}>
+            <CardContent>
+              <Typography color="text.secondary">
+                To Grade
+              </Typography>
+              <Typography variant="h4" fontWeight="bold">
+                {submissions.filter(s => s.status === 'Submitted').length}
+              </Typography>
+            </CardContent>
+          </Card>
+          <Card sx={{ ...cardStyle, minWidth: 220 }}>
+            <CardContent>
+              <Typography color="text.secondary">
+                Graded
+              </Typography>
+              <Typography variant="h4" fontWeight="bold">
+                {submissions.filter(s => s.status === 'Graded').length}
+              </Typography>
+            </CardContent>
+          </Card>
+        </Box>
+
+        {/* ===== QUICK ACTION CARDS FIXED AT BOTTOM LEFT ===== */}
+        <Box
+          sx={{
+            position: 'fixed',
+            left: 280, // move further right to clear sidebar
+            bottom: 32,
+            zIndex: 1201,
+            display: 'flex',
+            gap: 2,
+          }}
+        >
+          <Card
+            sx={cardStyle}
+            onClick={() => navigate('/question-paper-management')}
+            style={{ cursor: 'pointer', minWidth: 180 }}
+          >
+            <CardContent>
+              <Stack direction="row" spacing={2} alignItems="center">
+                <Avatar sx={{ bgcolor: 'primary.main' }}>
+                  <Assignment />
+                </Avatar>
+                <Box>
+                  <Typography fontWeight="bold">Question Paper</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Create/manage
+                  </Typography>
+                </Box>
+              </Stack>
+            </CardContent>
+          </Card>
+          <Card
+            sx={cardStyle}
+            onClick={() => navigate('/manage-exams')}
+            style={{ cursor: 'pointer', minWidth: 180 }}
+          >
+            <CardContent>
+              <Stack direction="row" spacing={2} alignItems="center">
+                <Avatar sx={{ bgcolor: 'primary.main' }}>
+                  <Quiz />
+                </Avatar>
+                <Box>
+                  <Typography fontWeight="bold">Manage Exam</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Schedule/edit
+                  </Typography>
+                </Box>
+              </Stack>
+            </CardContent>
+          </Card>
+        </Box>
+
+        {/* ===== Upcoming Exams & Recent Submissions side by side ===== */}
+        <Box sx={{ display: 'flex', gap: 4 }}>
+          {/* Left: Upcoming Exams */}
+          <Box sx={{ flex: 1 }}>
+            <Card sx={cardStyle}>
+              <CardContent>
+                <Typography fontWeight="bold" mb={2}>
+                  Upcoming Exams
+                </Typography>
+                <List>
+                  {upcomingClasses.length === 0 ? (
+                    <Typography color="text.secondary">
+                      upcoming exams
+                    </Typography>
+                  ) : (
+                    upcomingClasses.map((cls) => (
+                      <ListItem key={cls.id}>
+                        <ListItemAvatar>
+                          <Avatar sx={{ bgcolor: alpha('#6366f1',0.1), color:'#6366f1'}}>
+                            {cls.title?.charAt(0)}
+                          </Avatar>
+                        </ListItemAvatar>
+                        <ListItemText
+                          primary={cls.title}
+                          secondary={`${cls.date} at ${cls.time}`}
+                        />
+                      </ListItem>
+                    ))
+                  )}
+                </List>
+              </CardContent>
+            </Card>
+          </Box>
+
+          {/* Right: Recent Submissions */}
+          <Box sx={{ flex: 2 }}>
+            <Card sx={cardStyle}>
+              <CardContent>
+                <Typography fontWeight="bold" mb={2}>
+                  Recent Submissions
+                </Typography>
+                <Stack spacing={2}>
+                  {submissions.map((submission) => (
+                    <Box
+                      key={submission.id}
+                      sx={{
+                        display:'flex',
+                        justifyContent:'space-between',
+                        alignItems:'center',
+                        p:2,
+                        borderRadius:2,
+                        bgcolor:'#f8fafc'
+                      }}
+                    >
+                      <Stack direction="row" spacing={2} alignItems="center">
+                        <Avatar>
                           {submission.student.charAt(0)}
-                        </div>
-                        {submission.student}
-                      </td>
-                      <td>{submission.assignment}</td>
-                      <td>
-                        <span className={`status-badge ${getStatusClass(submission.status)}`}>
-                          {submission.status}
-                        </span>
-                      </td>
-                      <td>
-                        {submission.grade === '--' ? (
-                          <select 
-                            className="grade-select"
-                            onChange={(e) => handleGradeUpdate(submission.id, e.target.value)}
-                          >
-                            <option value="--">--</option>
-                            <option value="A">A</option>
-                            <option value="B">B</option>
-                            <option value="C">C</option>
-                            <option value="D">D</option>
-                            <option value="F">F</option>
-                          </select>
-                        ) : (
-                          <span className="grade-value">{submission.grade}</span>
-                        )}
-                      </td>
-                      <td>
-                        <button className="btn-action">View</button>
-                      </td>
-                    </tr>
+                        </Avatar>
+                        <Box>
+                          <Typography fontWeight="bold">
+                            {submission.student}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {submission.assignment}
+                          </Typography>
+                        </Box>
+                      </Stack>
+                      <Chip
+                        label={submission.status}
+                        sx={{
+                          bgcolor: alpha(getStatusColor(submission.status),0.1),
+                          color: getStatusColor(submission.status),
+                          fontWeight:'bold'
+                        }}
+                      />
+                    </Box>
                   ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
+                </Stack>
+              </CardContent>
+            </Card>
+          </Box>
+        </Box>
 
-          <section className="stats-overview card">
-            <h2>Overview</h2>
-            <div className="stats-grid">
-              <div className="stat-card">
-                <div className="stat-value">{submissions.filter(s => s.status === 'Submitted').length}</div>
-                <div className="stat-label">To Grade</div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-value">{submissions.filter(s => s.status === 'Graded').length}</div>
-                <div className="stat-label">Graded</div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-value">{upcomingClasses.length}</div>
-                <div className="stat-label">Upcoming</div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-value">0</div>
-                <div className="stat-label">Avg. Score</div>
-              </div>
-            </div>
-          </section>
-        </div>
-      </div>
-    </div>
+      </Box>
+
+    </Box>
   );
 };
 
-export default Teacherdashborad;
+export default Teacherdashboard;

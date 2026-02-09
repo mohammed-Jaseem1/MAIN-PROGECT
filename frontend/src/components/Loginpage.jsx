@@ -18,7 +18,7 @@ function Login() {
     try {
       let url;
       if (isTeacher) {
-        url = "http://localhost:5000/api/teacher/login";
+        url = "http://localhost:5000/api/teacher-auth/login"; // FIXED endpoint
       } else if (isStudent) {
         url = "http://localhost:5000/api/student/login"; // Student login endpoint
       } else {

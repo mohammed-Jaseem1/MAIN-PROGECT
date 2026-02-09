@@ -12,7 +12,7 @@ function StudentDashboard() {
     { id: 'courses', icon: 'book_5', label: 'My Courses' },
     { id: 'exams', icon: 'assignment_turned_in', label: 'Exams' },
     { id: 'assignments', icon: 'edit_note', label: 'Assignments' },
-    { id: 'settings', icon: 'settings', label: 'Settings' }
+    { id: 'notifications', icon: 'notifications', label: 'Notifications', route: '/student-notifications' }
   ];
 
   const stats = [
@@ -101,47 +101,93 @@ function StudentDashboard() {
 
   return (
     <div className="student-dashboard">
-      {/* Sidebar Navigation */}
-      <aside className="sidebar">
-        <div className="sidebar-header">
-          <div className="logo">
-            <div className="logo-icon">
-              <span className="material-symbols-outlined">school</span>
-            </div>
-            <span className="logo-text">EduFlow</span>
-          </div>
-        </div>
-        
-        <div className="nav-menu">
-          {navItems.map((item) => (
-            <div 
+      {/* Sidebar with teacher profile at bottom */}
+      <div
+        style={{
+          width: 180,
+          background: "#1e293b",
+          color: "#fff",
+          position: "fixed",
+          left: 0,
+          top: 0,
+          bottom: 0,
+          zIndex: 1100,
+          display: "flex",
+          flexDirection: "column",
+          padding: "32px 16px",
+          gap: "16px",
+          justifyContent: "space-between"
+        }}
+      >
+        <div>
+          <div style={{ fontWeight: "bold", fontSize: "1.2rem", marginBottom: "18px" }}>Menu</div>
+          {navItems.map(item => (
+            <button
               key={item.id}
-              className={`nav-item ${activeNav === item.id ? 'active' : ''}`}
-              onClick={() => setActiveNav(item.id)}
+              style={{
+                background: "#1e293b",
+                color: "#fff",
+                border: "none",
+                textAlign: "left",
+                padding: "10px",
+                borderRadius: "6px",
+                cursor: "pointer",
+                marginBottom: "8px",
+                fontSize: "1rem",
+                display: "flex",
+                alignItems: "center"
+              }}
+              onClick={() => {
+                setActiveNav(item.id);
+                if (item.route) navigate(item.route);
+              }}
             >
               <span className="material-symbols-outlined">{item.icon}</span>
-              <p>{item.label}</p>
-            </div>
+              <span style={{ marginLeft: 8 }}>{item.label}</span>
+            </button>
           ))}
         </div>
-        
-        <div className="sidebar-footer">
-          <div className="user-profile">
-            <div className="user-avatar"></div>
-            <div className="user-info">
-              <h3>{user.name}</h3>
-              <p>CS Senior</p>
-            </div>
+        <div style={{
+          borderTop: "1px solid #334155",
+          paddingTop: "18px",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center"
+        }}>
+          <div style={{
+            width: 56,
+            height: 56,
+            borderRadius: "50%",
+            background: "#334155",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 28,
+            marginBottom: 8
+          }}>
+            <span role="img" aria-label="student">🧑‍🎓</span>
           </div>
-          <button className="logout-btn" onClick={handleLogout}>
-            <span className="material-symbols-outlined">logout</span>
-            <span>Logout</span>
+          <div style={{ fontWeight: "bold", fontSize: "1rem" }}>{user.name}</div>
+          <div style={{ fontSize: "0.85rem", color: "#cbd5e1", marginBottom: 8 }}>student@email.com</div>
+          <button
+            style={{
+              background: "#4a6cf7",
+              color: "#fff",
+              border: "none",
+              padding: "8px 16px",
+              borderRadius: "6px",
+              cursor: "pointer",
+              fontSize: "1rem",
+              marginTop: 8
+            }}
+            onClick={handleLogout}
+          >
+            Logout
           </button>
         </div>
-      </aside>
-
+      </div>
       {/* Main Content Area */}
-      <main className="main-content">
+      <main className="main-content" style={{ width: '100%', marginLeft: 180 }}>
         <div className="content-container">
           {/* Page Heading */}
           <div className="page-header">
@@ -282,7 +328,7 @@ function StudentDashboard() {
         </div>
       </main>
     </div>
-  );
-}
+ );
+};
 
 export default StudentDashboard;

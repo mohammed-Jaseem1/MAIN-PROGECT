@@ -5,8 +5,7 @@ import './style/TeacherManagement.css';
 
 const TeacherManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedDepartment, setSelectedDepartment] = useState('All Departments');
-  const [selectedStatus, setSelectedStatus] = useState('Status');
+  // Remove department and status state
   const [selectedSubject, setSelectedSubject] = useState('ALL SUBJECTS');
   const [teachers, setTeachers] = useState([]);
   const navigate = useNavigate(); // Add this line
@@ -15,14 +14,13 @@ const TeacherManagement = () => {
   const departments = ['All Departments', 'Science & Logic Dept', 'Humanities Dept', 'Arts Dept', 'Physical Education Dept'];
   const statuses = ['Status', 'ACTIVE', 'ON LEAVE', 'INACTIVE', 'PENDING'];
 
-  const stats = {
+  const [stats, setStats] = useState({
     totalTeachers: '',
     activeNow: '',
-    openPositions: '',
     growthRate: '',
     engagementRate: '',
     urgentRequirements: '',
-  };
+  });
 
   useEffect(() => {
     fetch('/api/teacher')
@@ -41,6 +39,22 @@ const TeacherManagement = () => {
         setTeachers(mappedTeachers);
       })
       .catch(err => console.error('Error fetching teachers:', err));
+
+    // Fetch total teachers
+    fetch('/api/teacher/count')
+      .then(res => res.json())
+      .then(data => {
+        setStats(prev => ({ ...prev, totalTeachers: data.total }));
+      })
+      .catch(err => console.error('Error fetching total teacher count:', err));
+
+    // Fetch active teachers
+    fetch('/api/teacher/active-count')
+      .then(res => res.json())
+      .then(data => {
+        setStats(prev => ({ ...prev, activeNow: data.active }));
+      })
+      .catch(err => console.error('Error fetching active teacher count:', err));
   }, []);
 
   const handleSearch = (e) => {
@@ -51,20 +65,10 @@ const TeacherManagement = () => {
     navigate('/add-teacher'); // Navigate to AddTeacherForm page
   };
 
-  const handleEditTeacher = (teacherId) => {
-    alert(`Edit teacher with ID: ${teacherId}`);
-    // Implement edit logic
-  };
-
   const handleDeleteTeacher = (teacherId) => {
     if (window.confirm('Are you sure you want to delete this teacher?')) {
       setTeachers(teachers.filter(teacher => teacher.id !== teacherId));
     }
-  };
-
-  const handleViewDetails = (teacherId) => {
-    alert(`View details for teacher ID: ${teacherId}`);
-    // Implement view details logic
   };
 
   const filteredTeachers = teachers.filter(teacher => {
@@ -72,17 +76,9 @@ const TeacherManagement = () => {
       teacher.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       teacher.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       teacher.subject.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesDepartment = selectedDepartment === 'All Departments' || 
-      teacher.department === selectedDepartment;
-    
-    const matchesStatus = selectedStatus === 'Status' || 
-      teacher.status === selectedStatus;
-
     const matchesSubject = selectedSubject === 'ALL SUBJECTS' || 
       teacher.subject.toUpperCase().includes(selectedSubject);
-
-    return matchesSearch && matchesDepartment && matchesStatus && matchesSubject;
+    return matchesSearch && matchesSubject;
   });
 
   const getInitials = (name) => {
@@ -104,47 +100,121 @@ const TeacherManagement = () => {
   };
 
   return (
-    <div className="teacher-management">
+    <div className="teacher-management" style={{ display: 'flex', minHeight: '100vh' }}>
       {/* Sidebar */}
-      <aside className="admin-sidebar">
-        <div className="sidebar-header">
-          <h1 className="admin-title">EduAdmin Pro</h1>
-          <h2 className="admin-subtitle">ADMIN SUITE</h2>
+      <aside
+        style={{
+          width: 220,
+          minHeight: '100vh',
+          background: '#1e293b',
+          color: '#fff',
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          zIndex: 1200,
+          boxShadow: '0 2px 8px rgba(30,41,59,0.08)',
+          display: 'flex',
+          flexDirection: 'column',
+          padding: '24px 12px'
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 32 }}>
+          <div style={{
+            width: 40,
+            height: 40,
+            background: '#2563eb',
+            borderRadius: 8,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#fff'
+          }}>
+            <span className="material-symbols-outlined">school</span>
+          </div>
+          <span style={{ fontWeight: 700, fontSize: 18 }}>EduAdmin</span>
         </div>
-        <nav className="sidebar-nav">
-          <button className="sidebar-btn active">Dashboard</button>
-          <button className="sidebar-btn">Teachers</button>
-          <button className="sidebar-btn">Classes</button>
-          <button className="sidebar-btn">Schedule</button>
+        <nav style={{ flex: 1 }}>
+          <button
+            style={{
+              display: 'block',
+              width: '100%',
+              padding: '10px 16px',
+              borderRadius: 6,
+              color: '#fff',
+              fontWeight: 600,
+              background: '#2563eb',
+              marginBottom: 8,
+              textDecoration: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              boxShadow: '0 2px 8px rgba(37,99,235,0.15)'
+            }}
+          >
+            Teachers
+          </button>
+          <button
+            style={{
+              display: 'block',
+              width: '100%',
+              padding: '10px 16px',
+              borderRadius: 6,
+              color: '#fff',
+              fontWeight: 600,
+              background: 'transparent',
+              marginBottom: 8,
+              textDecoration: 'none',
+              border: 'none',
+              cursor: 'pointer'
+            }}
+            onClick={() => navigate('/student-management')}
+          >
+            Students
+          </button>
+          <button
+            style={{
+              display: 'block',
+              width: '100%',
+              padding: '10px 16px',
+              borderRadius: 6,
+              color: '#fff',
+              fontWeight: 600,
+              background: 'transparent',
+              marginBottom: 8,
+              textDecoration: 'none',
+              border: 'none',
+              cursor: 'pointer'
+            }}
+          >
+            Classes
+          </button>
         </nav>
-        <div className="sidebar-user">
-          <div className="user-avatar">admin</div>
+        <div style={{
+          marginTop: 'auto',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          background: 'rgba(51,65,85,0.15)',
+          borderRadius: 6,
+          padding: '10px 12px'
+        }}>
+          <div style={{
+            width: 32,
+            height: 32,
+            background: '#10b981',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#fff',
+            fontWeight: 700
+          }}>A</div>
+          <div>
+            <div style={{ fontWeight: 600, fontSize: 14 }}>Admin User</div>
+            <div style={{ fontSize: 12, color: '#cbd5e1' }}>Super Admin</div>
+          </div>
         </div>
       </aside>
-
-      <div className="main-content">
-        {/* Back Button */}
-        <button
-          className="back-btn"
-          onClick={() => navigate(-1)}
-          style={{
-            position: "absolute",
-            top: 24,
-            left: 32,
-            background: "#2563eb",
-            color: "#fff",
-            border: "none",
-            borderRadius: "6px",
-            padding: "8px 18px",
-            cursor: "pointer",
-            fontWeight: 600,
-            zIndex: 10,
-          }}
-          aria-label="Back"
-        >
-          ← Back
-        </button>
-
+      <div className="main-content" style={{ marginLeft: 230 }}>
         {/* Page Header */}
         <div className="page-header">
           <h1>Teacher Management</h1>
@@ -177,51 +247,19 @@ const TeacherManagement = () => {
             <div className="stat-icon">●</div>
           </div>
 
-          <div className="stat-card">
-            <div className="stat-header">
-              <h3>Open Positions</h3>
-              <span className="stat-trend urgent">
-                ⚠ {stats.urgentRequirements} urgent requirements
-              </span>
-            </div>
-            <div className="stat-value">{stats.openPositions}</div>
-            <div className="stat-icon">©</div>
-          </div>
+          {/* Removed Open Positions stat card */}
         </div>
 
         {/* Filters and Search */}
         <div className="filters-container">
           <div className="search-box">
-            <span className="search-icon">Q</span>
             <input
               type="text"
-              placeholder="Search by name, subject or ID..."
+              placeholder="Search by name, subject or email..."
               value={searchTerm}
               onChange={handleSearch}
               className="search-input"
             />
-          </div>
-
-          <div className="filter-dropdowns">
-            <select 
-              className="filter-select"
-              value={selectedDepartment}
-              onChange={(e) => setSelectedDepartment(e.target.value)}
-            >
-              {departments.map(dept => (
-                <option key={dept} value={dept}>{dept}</option>
-              ))}
-            </select>
-
-            <select 
-              className="filter-select"
-              value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
-            >
-              {statuses.map(status => (
-                <option key={status} value={status}>{status}</option>
-              ))}
-            </select>
           </div>
         </div>
 
@@ -245,9 +283,7 @@ const TeacherManagement = () => {
               <tr>
                 <th>TEACHER NAME</th>
                 <th>SUBJECT SPECIALIZATION</th>
-                <th>DEPARTMENT</th>
                 <th>STATUS</th>
-                <th>ACTIONS</th>
               </tr>
             </thead>
             <tbody>
@@ -271,9 +307,6 @@ const TeacherManagement = () => {
                     <span className="subject-badge">{teacher.subject}</span>
                   </td>
                   <td>
-                    <span className="department">{teacher.department}</span>
-                  </td>
-                  <td>
                     <span 
                       className="status-badge"
                       style={{ 
@@ -288,31 +321,6 @@ const TeacherManagement = () => {
                       {teacher.status}
                     </span>
                   </td>
-                  <td>
-                    <div className="action-buttons">
-                      <button 
-                        className="action-btn view-btn"
-                        onClick={() => handleViewDetails(teacher.id)}
-                        title="View Details"
-                      >
-                        👁
-                      </button>
-                      <button 
-                        className="action-btn edit-btn"
-                        onClick={() => handleEditTeacher(teacher.id)}
-                        title="Edit"
-                      >
-                        ✓
-                      </button>
-                      <button 
-                        className="action-btn delete-btn"
-                        onClick={() => handleDeleteTeacher(teacher.id)}
-                        title="Delete"
-                      >
-                        ☑
-                      </button>
-                    </div>
-                  </td>
                 </tr>
               ))}
             </tbody>
@@ -320,16 +328,7 @@ const TeacherManagement = () => {
         </div>
 
         {/* Table Footer */}
-        <div className="table-footer">
-          <div className="pagination-info">
-            Showing {filteredTeachers.length} of {teachers.length} teachers
-          </div>
-          <div className="pagination-controls">
-            <button className="pagination-btn" disabled>← Previous</button>
-            <span className="page-numbers">Page 1 of 31</span>
-            <button className="pagination-btn">Next →</button>
-          </div>
-        </div>
+        {/* Removed table-footer section */}
       </div>
     </div>
   );
