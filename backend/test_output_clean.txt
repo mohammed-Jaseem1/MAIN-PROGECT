@@ -1,0 +1,4 @@
+Connected to DB
+Parsing paper: HEALTH SERVIES .pdf
+Text extracted length: 10310
+First 100 chars:   r66/20r6 1.Cb.oical  @DloifDr  of ..!.ib.  : (cr)  SiUca '  (A)  M.iLoh*t€ (C)  Pdn.quin€ (B)  Qui

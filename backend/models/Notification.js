@@ -6,6 +6,10 @@ const notificationSchema = new mongoose.Schema({
     enum: ['student', 'teacher'],
     required: true
   },
+  level: {
+    type: String,
+    default: 'All'
+  },
   title: {
     type: String,
     required: true

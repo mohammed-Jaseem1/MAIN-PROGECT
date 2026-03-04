@@ -1,71 +1,23 @@
-/* ===== GLOBAL RESET ===== */
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+.teacher-dashboard {
+  background: var(--bg-main);
+  min-height: 100vh;
+  padding: var(--space-xl);
 }
 
-html, body, #root {
-  height: 100%;
-  width: 100%;
+.MuiCard-root {
+  border-radius: var(--radius-lg) !important;
+  box-shadow: var(--shadow-md) !important;
+  border: 1px solid var(--border-color) !important;
+  transition: var(--transition-normal) !important;
 }
-
-/* Better font rendering */
-body {
-  font-family: 'Inter', 'Roboto', sans-serif;
-  background-color: #f3f4f6;
-  -webkit-font-smoothing: antialiased;
-}
-
-/* ===== SCROLLBAR (Modern UI Style) ===== */
-
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: #f1f5f9;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
-
-/* ===== OPTIONAL — smoother buttons ===== */
-
-button {
-  cursor: pointer;
-  transition: 0.2s ease;
-}
-
-/* Remove ugly button focus outline for mouse users */
-button:focus {
-  outline: none;
-}
-
-/* ===== CARD HOVER BOOST (optional enhancement) ===== */
 
 .MuiCard-root:hover {
   transform: translateY(-4px);
+  box-shadow: var(--shadow-lg) !important;
 }
 
-/* ===== Avatar text weight ===== */
-
-.MuiAvatar-root {
-  font-weight: 600;
+.MuiButton-root {
+  border-radius: var(--radius-md) !important;
+  text-transform: none !important;
+  font-weight: 700 !important;
 }
-
-/* ===== Better chip appearance ===== */
-
-.MuiChip-root {
-  border-radius: 8px !important;
-}
-
-/* Remove legacy sidebar styles if present */
-/* .sidebar { display: none !important; } */

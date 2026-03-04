@@ -40,22 +40,43 @@ import {
   Settings as SettingsIcon,
   Logout as LogoutIcon,
   TrendingUp as TrendingUpIcon,
-  CreditCard as CreditCardIcon
+  CreditCard as CreditCardIcon,
+  Quiz as QuizIcon,
+  Assignment as AssignmentIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 
 // Custom Styled Components (imitated via sx for simplicity in single file)
-const cardStyle = (theme) => ({
-  borderRadius: 4,
-  boxShadow: '0px 10px 30px rgba(0, 0, 0, 0.04)',
-  border: 'none',
-  height: '100%',
-  transition: 'transform 0.2s, box-shadow 0.2s',
+const premiumCardStyle = {
+  borderRadius: '24px',
+  background: 'rgba(255, 255, 255, 0.9)',
+  backdropFilter: 'blur(10px)',
+  border: '1px solid rgba(255, 255, 255, 0.4)',
+  boxShadow: '0 10px 40px -10px rgba(79, 70, 229, 0.12)',
+  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
   '&:hover': {
-    transform: 'translateY(-4px)',
-    boxShadow: '0px 20px 40px rgba(0, 0, 0, 0.08)',
+    transform: 'translateY(-8px)',
+    boxShadow: '0 20px 50px -12px rgba(79, 70, 229, 0.2)',
+    border: '1px solid rgba(79, 70, 229, 0.2)',
   },
-});
+};
+
+const statsCardStyle = {
+  ...premiumCardStyle,
+  padding: '12px',
+  position: 'relative',
+  overflow: 'hidden',
+  '&::after': {
+    content: '""',
+    position: 'absolute',
+    top: '-50%',
+    right: '-50%',
+    width: '100%',
+    height: '200%',
+    background: 'radial-gradient(circle, rgba(79, 70, 229, 0.03) 0%, transparent 70%)',
+    zIndex: 0,
+  }
+};
 
 const Admindash = () => {
   const theme = useTheme();
@@ -68,10 +89,11 @@ const Admindash = () => {
   // Add state for recent registrations
   const [registrationData, setRegistrationData] = useState([]);
 
-  // Add state for stats
   const [stats, setStats] = useState({
     totalLearners: 0,
     activeInstructors: 0,
+    totalExams: 0,
+    examsTaken: 0
   });
 
   useEffect(() => {
@@ -114,24 +136,38 @@ const Admindash = () => {
       }
     };
 
-    // Fetch stats for learners and instructors
+    // Fetch stats for all metrics
     const fetchStats = async () => {
       try {
         // Fetch all students
         const studentRes = await fetch('http://localhost:5000/api/student');
         const students = studentRes.ok ? await studentRes.json() : [];
+
         // Fetch all teachers
         const teacherRes = await fetch('http://localhost:5000/api/teacher');
         const teachers = teacherRes.ok ? await teacherRes.json() : [];
 
+        // Fetch all exams
+        const examRes = await fetch('http://localhost:5000/api/exams');
+        const exams = examRes.ok ? await examRes.json() : [];
+
+        // Fetch all results (exams taken)
+        const resultsRes = await fetch('http://localhost:5000/api/exams/results');
+        const results = resultsRes.ok ? await resultsRes.json() : [];
+
         setStats({
           totalLearners: students.length,
-          activeInstructors: teachers.length, // Changed to total teachers
+          activeInstructors: teachers.length,
+          totalExams: exams.length,
+          examsTaken: results.length
         });
-      } catch {
+      } catch (err) {
+        console.error('Error fetching admin stats:', err);
         setStats({
           totalLearners: 0,
           activeInstructors: 0,
+          totalExams: 0,
+          examsTaken: 0
         });
       }
     };
@@ -161,6 +197,26 @@ const Admindash = () => {
       isIncrease: true,
       color: '#10b981', // Emerald
       bg: alpha('#10b981', 0.1)
+    },
+    {
+      id: 3,
+      title: 'Total Exams',
+      value: stats.totalExams,
+      icon: <QuizIcon sx={{ fontSize: 32 }} />, // Use QuizIcon or similar
+      change: '+18%',
+      isIncrease: true,
+      color: '#f59e0b', // Amber
+      bg: alpha('#f59e0b', 0.1)
+    },
+    {
+      id: 4,
+      title: 'Exams Taken',
+      value: stats.examsTaken,
+      icon: <AssignmentIcon sx={{ fontSize: 32 }} />,
+      change: '+24%',
+      isIncrease: true,
+      color: '#8b5cf6', // Violet
+      bg: alpha('#8b5cf6', 0.1)
     }
   ];
 
@@ -392,23 +448,23 @@ const Admindash = () => {
         sx={{
           flex: 1,
           minHeight: '100vh',
-          bgcolor: 'white',
-          p: 4,
+          background: 'radial-gradient(circle at 10% 20%, rgba(79, 70, 229, 0.05) 0%, transparent 40%), radial-gradient(circle at 90% 80%, rgba(124, 58, 237, 0.05) 0%, transparent 40%)',
+          p: 0,
           overflowY: 'auto',
           marginLeft: '240px'
         }}
       >
         {/* Topbar */}
-        <Paper
-          elevation={0}
+        <Box
           sx={{
-            py: 2,
-            px: 4,
+            py: 4,
+            px: 6,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            bgcolor: 'white',
-            borderBottom: '1px solid rgba(0,0,0,0.06)',
+            background: 'rgba(255, 255, 255, 0.7)',
+            backdropFilter: 'blur(10px)',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.3)',
             position: 'sticky',
             top: 0,
             zIndex: 1100
@@ -421,25 +477,33 @@ const Admindash = () => {
               </IconButton>
             )}
             <Box>
-              <Typography variant="h5" fontWeight="800" color="text.primary">
-                Dashboard
+              <Typography variant="h3" fontWeight="800" sx={{
+                color: '#1e293b',
+                letterSpacing: '-1.5px',
+                background: 'linear-gradient(135deg, #1e293b 0%, #475569 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                lineHeight: 1.2
+              }}>
+                Control Center
               </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Overview of your education platform
+              <Typography variant="h6" sx={{ color: '#64748b', fontWeight: 500, fontSize: '1rem' }}>
+                System-wide overview and administrative controls.
               </Typography>
             </Box>
           </Box>
 
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-            <IconButton sx={{ bgcolor: '#f1f5f9' }}>
-              <NotificationsIcon color="action" />
+            <IconButton sx={{
+              bgcolor: 'rgba(79, 70, 229, 0.05)',
+              color: '#4f46e5',
+              '&:hover': { bgcolor: 'rgba(79, 70, 229, 0.1)' }
+            }}>
+              <NotificationsIcon />
             </IconButton>
-
-            <Divider orientation="vertical" flexItem sx={{ height: 24, alignSelf: 'center' }} />
-
-            {/* Remove Admin Profile from Topbar */}
           </Box>
-        </Paper>
+        </Box>
+
 
         {/* Scrollable Content */}
         <Container
@@ -455,22 +519,21 @@ const Admindash = () => {
           }}
         >
           {/* Stats Grid */}
-          <Grid container spacing={3} sx={{ mb: 4 }}>
+          <Grid container spacing={4} sx={{ mb: 6 }}>
             {statsData.map((stat) => (
-              <Grid item xs={12} sm={6} md={3} key={stat.id}>
-                <Card sx={cardStyle}>
-                  <CardContent sx={{ p: 3 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+              <Grid item xs={12} sm={6} md={6} lg={3} key={stat.id}>
+                <Card sx={statsCardStyle}>
+                  <CardContent sx={{ p: 3, position: 'relative', zIndex: 1 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
                       <Box
                         sx={{
-                          width: 48,
-                          height: 48,
-                          borderRadius: 3,
+                          p: 2,
+                          borderRadius: '16px',
+                          bgcolor: alpha(stat.color, 0.1),
+                          color: stat.color,
                           display: 'flex',
                           alignItems: 'center',
-                          justifyContent: 'center',
-                          bgcolor: stat.bg,
-                          color: stat.color
+                          justifyContent: 'center'
                         }}
                       >
                         {stat.icon}
@@ -478,20 +541,20 @@ const Admindash = () => {
                       <Chip
                         label={stat.change}
                         size="small"
-                        color={stat.isIncrease ? "success" : "error"}
-                        variant="soft" // Note: 'soft' might need custom theme or standard 'filled' + opacity
                         sx={{
+                          height: '24px',
                           bgcolor: stat.isIncrease ? alpha('#10b981', 0.1) : alpha('#ef4444', 0.1),
                           color: stat.isIncrease ? '#059669' : '#dc2626',
-                          fontWeight: 700,
-                          borderRadius: 2
+                          fontWeight: '800',
+                          borderRadius: '8px',
+                          fontSize: '0.75rem'
                         }}
                       />
                     </Box>
-                    <Typography variant="body2" color="text.secondary" fontWeight="500">
+                    <Typography sx={{ color: '#64748b', fontWeight: 600, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px' }}>
                       {stat.title}
                     </Typography>
-                    <Typography variant="h4" fontWeight="800" sx={{ mt: 1 }}>
+                    <Typography variant="h3" fontWeight="800" sx={{ mt: 1, color: '#1e293b' }}>
                       {stat.value}
                     </Typography>
                   </CardContent>
@@ -500,66 +563,76 @@ const Admindash = () => {
             ))}
           </Grid>
 
-          <Grid container spacing={4}>
+          <Grid container spacing={6}>
             {/* Recent Activity */}
-            <Grid item xs={12} lg={4}>
-              <Card sx={cardStyle}>
-                <CardContent sx={{ p: 3 }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                    <Typography variant="h6" fontWeight="700">Recent Registrations</Typography>
-                    <Button endIcon={<ArrowUpwardIcon sx={{ rotate: '90deg' }} />} sx={{ textTransform: 'none' }}>See All</Button>
+            <Grid item xs={12} lg={6}>
+              <Card sx={premiumCardStyle}>
+                <CardContent sx={{ p: 4 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+                    <Typography variant="h6" fontWeight="800" sx={{ color: '#1e293b' }}>
+                      RECENT REGISTRATIONS
+                    </Typography>
+                    <Button variant="text" sx={{ fontWeight: 700 }}>View All</Button>
                   </Box>
 
                   <List sx={{ p: 0 }}>
                     {registrationData.length === 0 ? (
-                      <Box sx={{ textAlign: 'center', py: 4 }}>
-                        <Typography color="text.secondary">No recent activity</Typography>
+                      <Box sx={{ textAlign: 'center', py: 6 }}>
+                        <Typography color="text.secondary">No recent registrations found</Typography>
                       </Box>
                     ) : (
                       registrationData.map((user, index) => (
-                        <React.Fragment key={user.id}>
-                          <ListItem
-                            sx={{
-                              p: 1.5,
-                              mb: 1,
-                              borderRadius: 2,
-                              '&:hover': { bgcolor: '#f8fafc' },
-                              transition: 'background-color 0.2s'
-                            }}
-                          >
-                            <ListItemAvatar>
-                              <Avatar
-                                sx={{
-                                  bgcolor: user.role === 'Teacher' ? alpha('#10b981', 0.1) : alpha('#6366f1', 0.1),
-                                  color: user.role === 'Teacher' ? '#10b981' : '#6366f1',
-                                  fontWeight: 'bold'
-                                }}
-                              >
-                                {user.name?.charAt(0)}
-                              </Avatar>
-                            </ListItemAvatar>
-                            <ListItemText
-                              primary={<Typography variant="subtitle2" fontWeight="600">{user.name}</Typography>}
-                              secondary={
-                                <Typography variant="caption" color="text.secondary">
-                                  {user.role} • {user.date}
-                                </Typography>
-                              }
-                            />
-                            <Chip
-                              label={user.status}
-                              size="small"
+                        <ListItem
+                          key={user.id}
+                          sx={{
+                            p: 2.5,
+                            mb: 2,
+                            borderRadius: '20px',
+                            bgcolor: alpha('#f8fafc', 0.8),
+                            border: '1px solid transparent',
+                            transition: '0.3s',
+                            '&:hover': {
+                              bgcolor: '#fff',
+                              borderColor: alpha('#4f46e5', 0.2),
+                              boxShadow: '0 10px 20px -5px rgba(0,0,0,0.05)',
+                              transform: 'scale(1.02)'
+                            }
+                          }}
+                        >
+                          <ListItemAvatar>
+                            <Avatar
                               sx={{
-                                height: 24,
-                                fontSize: '0.7rem',
-                                bgcolor: user.status === 'active' ? alpha('#10b981', 0.1) : alpha('#f59e0b', 0.1),
-                                color: user.status === 'active' ? '#059669' : '#d97706',
-                                fontWeight: 600
+                                width: 48,
+                                height: 48,
+                                bgcolor: user.role === 'Teacher' ? alpha('#10b981', 0.1) : alpha('#6366f1', 0.1),
+                                color: user.role === 'Teacher' ? '#10b981' : '#6366f1',
+                                fontWeight: '800'
                               }}
-                            />
-                          </ListItem>
-                          {index < registrationData.length - 1 && <Divider variant="inset" component="li" sx={{ ml: 9 }} />}
-                        </React.Fragment>
+                            >
+                              {user.name?.charAt(0)}
+                            </Avatar>
+                          </ListItemAvatar>
+                          <ListItemText
+                            primary={<Typography variant="subtitle1" fontWeight="800" sx={{ color: '#1e293b' }}>{user.name}</Typography>}
+                            secondary={
+                              <Typography variant="body2" sx={{ color: '#64748b' }}>
+                                {user.role} • {user.date}
+                              </Typography>
+                            }
+                          />
+                          <Chip
+                            label={user.status}
+                            sx={{
+                              height: 28,
+                              borderRadius: '8px',
+                              fontSize: '0.7rem',
+                              letterSpacing: '0.5px',
+                              bgcolor: user.status === 'active' ? alpha('#10b981', 0.1) : alpha('#f59e0b', 0.1),
+                              color: user.status === 'active' ? '#059669' : '#d97706',
+                              fontWeight: '800'
+                            }}
+                          />
+                        </ListItem>
                       ))
                     )}
                   </List>
@@ -569,44 +642,55 @@ const Admindash = () => {
           </Grid>
 
           {/* Quick Actions */}
-          <Box sx={{ mt: 5 }}>
-            <Typography variant="h6" fontWeight="700" sx={{ mb: 3 }}>Quick Actions</Typography>
-            <Grid container spacing={3}>
+          <Box sx={{ mt: 8 }}>
+            <Typography variant="h5" fontWeight="800" sx={{ mb: 4, color: '#1e293b', letterSpacing: '-0.5px' }}>
+              Quick Actions
+            </Typography>
+            <Grid container spacing={4}>
               {quickActions.map((action) => (
                 <Grid item xs={12} sm={6} md={3} key={action.label}>
                   <Card
                     component={Button}
                     onClick={() => handleQuickAction(action)}
                     sx={{
-                      ...cardStyle,
+                      ...premiumCardStyle,
                       width: '100%',
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      py: 4,
+                      py: 6,
                       textTransform: 'none',
-                      border: '1px solid transparent',
+                      border: '1px solid rgba(255, 255, 255, 0.5)',
                       '&:hover': {
-                        transform: 'translateY(-4px)',
-                        borderColor: alpha(action.color, 0.3),
-                        bgcolor: alpha(action.color, 0.02)
+                        transform: 'translateY(-12px)',
+                        borderColor: alpha(action.color, 0.4),
+                        bgcolor: alpha(action.color, 0.05),
+                        boxShadow: `0 20px 40px -10px ${alpha(action.color, 0.2)}`
                       }
                     }}
                   >
                     <Box
                       sx={{
-                        p: 2,
-                        borderRadius: '50%',
+                        p: 3,
+                        borderRadius: '24px',
                         bgcolor: alpha(action.color, 0.1),
                         color: action.color,
-                        mb: 2
+                        mb: 3,
+                        transition: '0.3s',
+                        '.MuiButton-root:hover &': {
+                          transform: 'scale(1.1) rotate(5deg)',
+                          bgcolor: alpha(action.color, 0.2),
+                        }
                       }}
                     >
-                      {React.cloneElement(action.icon, { fontSize: 'large' })}
+                      {React.cloneElement(action.icon, { sx: { fontSize: 40 } })}
                     </Box>
-                    <Typography variant="subtitle1" fontWeight="600" color="text.primary">
+                    <Typography variant="h6" fontWeight="800" color="text.primary">
                       {action.label}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#64748b', mt: 1 }}>
+                      Manage {action.label.split(' ')[1]}s
                     </Typography>
                   </Card>
                 </Grid>

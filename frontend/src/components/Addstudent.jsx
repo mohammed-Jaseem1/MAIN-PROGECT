@@ -1,6 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './style/Addstudent.css';
 import { useNavigate, useLocation } from 'react-router-dom';
+
+// ── Auto-generate a strong random password ──────────────────────────────────
+const generatePassword = () => {
+  const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+  const lower = 'abcdefghjkmnpqrstuvwxyz';
+  const digits = '23456789';
+  const special = '@#$%&*!';
+  const all = upper + lower + digits + special;
+  // Guarantee at least one of each category
+  const pick = (set) => set[Math.floor(Math.random() * set.length)];
+  const rand = Array.from({ length: 6 }, () => pick(all));
+  const pwd = [pick(upper), pick(lower), pick(digits), pick(special), ...rand];
+  // Fisher-Yates shuffle
+  for (let i = pwd.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pwd[i], pwd[j]] = [pwd[j], pwd[i]];
+  }
+  return pwd.join('');
+};
 
 function AddStudent() {
   const navigate = useNavigate();
@@ -8,11 +27,11 @@ function AddStudent() {
   const [formData, setFormData] = useState({
     student_id: '',
     edu_level: '',
-    post: '', // Add post field
+    post: '',
     account_status: true,
     full_name: '',
     email: '',
-    password: '',
+    password: generatePassword(),
     phone: '',
     batch: '',
   });
@@ -20,8 +39,15 @@ function AddStudent() {
   const [phoneError, setPhoneError] = useState('');
   const [phoneFocused, setPhoneFocused] = useState(false);
   const [emailFocused, setEmailFocused] = useState(false);
+  const [toast, setToast] = useState(null); // { type: 'success'|'error'|'warning', message: '' }
 
   const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const showToast = (type, message, duration = 5000) => {
+    setToast({ type, message });
+    setTimeout(() => setToast(null), duration);
+  };
 
   useEffect(() => {
     const year = new Date().getFullYear();
@@ -73,24 +99,35 @@ function AddStudent() {
       setPhoneError('Phone must be +91 and start with 9, 8, or 7 and have 10 digits');
       return;
     }
+    setIsSubmitting(true);
     try {
       const response = await fetch('http://localhost:5000/api/student', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
+      const data = await response.json();
       if (response.ok) {
-        const data = await response.json();
-        alert('Student added successfully!');
-        // Optionally reset form or redirect
+        if (data.emailWarning) {
+          showToast('warning', `✅ Student account created! ⚠️ ${data.emailWarning}`);
+        } else {
+          showToast('success', `🎉 Account created! A welcome email with login credentials has been sent to ${formData.email}.`);
+        }
+        // Reset form with a new student_id and a fresh auto-generated password
+        const year = new Date().getFullYear();
+        const randomNum = Math.floor(100 + Math.random() * 900);
+        setFormData({
+          student_id: `STU-${year}-${randomNum}`,
+          edu_level: '', post: '', account_status: true,
+          full_name: '', email: '', password: generatePassword(), phone: '', batch: '',
+        });
       } else {
-        const error = await response.json();
-        alert('Error: ' + error.error);
+        showToast('error', `❌ Error: ${data.error || 'Could not create student account.'}`);
       }
     } catch (err) {
-      alert('Network error: ' + err.message);
+      showToast('error', `❌ Network error: ${err.message}`);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -170,6 +207,45 @@ function AddStudent() {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
+      {/* Toast Notification */}
+      {toast && (
+        <div style={{
+          position: 'fixed', top: 24, right: 24, zIndex: 9999,
+          maxWidth: 420, minWidth: 280,
+          background: toast.type === 'success' ? '#dcfce7'
+            : toast.type === 'warning' ? '#fef9c3'
+              : '#fee2e2',
+          border: `1.5px solid ${toast.type === 'success' ? '#16a34a'
+            : toast.type === 'warning' ? '#d97706'
+              : '#dc2626'}`,
+          borderLeft: `5px solid ${toast.type === 'success' ? '#16a34a'
+            : toast.type === 'warning' ? '#d97706'
+              : '#dc2626'}`,
+          borderRadius: 12,
+          padding: '16px 20px',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
+          fontSize: 14,
+          fontWeight: 500,
+          color: toast.type === 'success' ? '#166534'
+            : toast.type === 'warning' ? '#92400e'
+              : '#991b1b',
+          lineHeight: 1.6,
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: 10,
+          animation: 'slideInToast 0.3s ease'
+        }}>
+          <span style={{ flex: 1 }}>{toast.message}</span>
+          <button
+            onClick={() => setToast(null)}
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              color: 'inherit', fontSize: 18, lineHeight: 1, opacity: 0.7,
+              padding: '0 0 0 8px', flexShrink: 0
+            }}
+          >✕</button>
+        </div>
+      )}
       {/* Sidebar */}
       <aside
         style={{
@@ -258,18 +334,18 @@ function AddStudent() {
       </aside>
 
       {/* Main Content */}
-      <div style={{ flex: 1 }}>
+      <div style={{ padding: 0 }}>
         {/* Removed back button */}
-        <main className="main-content">
-          <div style={{ width: '100%', maxWidth: 900 }}>
+        <main className="add-student-main-content">
+          <div style={{ width: '100%', paddingLeft: '220px' }}>
             <div className="page-header">
               <nav className="breadcrumb">
                 <a href="#" className="breadcrumb-link">Students</a>
                 <span className="material-symbols-outlined breadcrumb-separator">chevron_right</span>
                 <span className="breadcrumb-current">Add New Student</span>
               </nav>
-              <h1 style={{ textAlign: 'center' }}>Register New Student</h1>
-              <p className="subtitle" style={{ textAlign: 'center' }}>
+              <h1>Register New Student</h1>
+              <p className="subtitle">
                 Fill in the details below to create a new student account and assign them to a batch.
               </p>
             </div>
@@ -384,7 +460,7 @@ function AddStudent() {
                         onBlur={() => setEmailFocused(false)}
                       />
                       {(emailFocused || formData.email) && (
-                        <small style={{color:'#2563eb', fontSize:'0.9em'}}>
+                        <small style={{ color: '#2563eb', fontSize: '0.9em' }}>
                           Please enter a valid institutional email address (e.g. student@gmail.com)
                         </small>
                       )}
@@ -403,7 +479,7 @@ function AddStudent() {
                       />
                       {(phoneFocused || formData.phone) && (
                         <>
-                          {phoneError && <span className="error-message" style={{color:'red', fontSize:'0.9em'}}>{phoneError}</span>}
+                          {phoneError && <span className="error-message" style={{ color: 'red', fontSize: '0.9em' }}>{phoneError}</span>}
                           <small>Format: +91XXXXXXXXXX (starts with 9, 8, or 7)</small>
                         </>
                       )}
@@ -415,18 +491,32 @@ function AddStudent() {
                           type={showPassword ? "text" : "password"}
                           id="password"
                           value={formData.password}
-                          onChange={handleChange}
+                          readOnly
+                          style={{ letterSpacing: showPassword ? 'normal' : '0.12em', background: '#f1f5f9', cursor: 'default' }}
                         />
                         <button
                           type="button"
                           className="password-toggle"
                           onClick={togglePasswordVisibility}
+                          title={showPassword ? 'Hide password' : 'Show password'}
                         >
                           <span className="material-symbols-outlined">
                             {showPassword ? "visibility_off" : "visibility"}
                           </span>
                         </button>
+                        <button
+                          type="button"
+                          className="password-toggle"
+                          onClick={() => setFormData(prev => ({ ...prev, password: generatePassword() }))}
+                          title="Generate new password"
+                          style={{ marginLeft: 2 }}
+                        >
+                          <span className="material-symbols-outlined">refresh</span>
+                        </button>
                       </div>
+                      <small style={{ color: '#64748b', fontSize: '0.85em', marginTop: 4 }}>
+                        🔒 Auto-generated — this password will be emailed to the student.
+                      </small>
                     </div>
                   </div>
                 </div>
@@ -469,9 +559,12 @@ function AddStudent() {
                 >
                   Cancel
                 </button>
-                <button type="submit" className="submit-btn">
-                  <span className="material-symbols-outlined">person_add</span>
-                  Create Account
+                <button type="submit" className="submit-btn" disabled={isSubmitting}
+                  style={{ opacity: isSubmitting ? 0.7 : 1, cursor: isSubmitting ? 'not-allowed' : 'pointer' }}>
+                  <span className="material-symbols-outlined">
+                    {isSubmitting ? 'hourglass_top' : 'person_add'}
+                  </span>
+                  {isSubmitting ? 'Sending...' : 'Create Account'}
                 </button>
               </div>
             </form>

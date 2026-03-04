@@ -1,31 +1,58 @@
-// AddTeacherForm.jsx
+// AddTeacherForm.jsx – Professional Redesign
 import React, { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import './style/AddTeacherForm.css';
 
+/* ─── helpers ─── */
 const generateEmployeeId = () => {
   const year = new Date().getFullYear();
-  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-  return `TCH-${year}-${random}`;
+  const rand = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+  return `TCH-${year}-${rand}`;
 };
 
+const generatePassword = () => {
+  const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+  const lower = 'abcdefghjkmnpqrstuvwxyz';
+  const digits = '23456789';
+  const special = '@#$%&*!';
+  const all = upper + lower + digits + special;
+  const pick = (set) => set[Math.floor(Math.random() * set.length)];
+  const rand = Array.from({ length: 6 }, () => pick(all));
+  const pwd = [pick(upper), pick(lower), pick(digits), pick(special), ...rand];
+  // Fisher-Yates shuffle
+  for (let i = pwd.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pwd[i], pwd[j]] = [pwd[j], pwd[i]];
+  }
+  return pwd.join('');
+};
+
+/* ─── Component ─── */
 const AddTeacherForm = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Sidebar nav items
+  const navItems = [
+    { label: 'Dashboard', path: '/admin' },
+    { label: 'Teachers', path: '/add-teacher' },
+    { label: 'Students', path: '/student-management' },
+    { label: 'Classes', path: '/courses' },
+  ];
+
+  /* ── form state ── */
   const [formData, setFormData] = useState({
-    // Personal Information
     firstName: '',
     lastName: '',
     email: '',
     phone: '',
     joiningDate: '',
-    
-    // Professional Details
     employeeId: generateEmployeeId(),
     subjects: [],
     newSubject: '',
     qualifications: '',
-    
-    // Account Setup
     username: '',
-    password: '',
+    password: generatePassword(),
   });
 
   const [errors, setErrors] = useState({});
@@ -34,87 +61,67 @@ const AddTeacherForm = () => {
   const [phoneFocused, setPhoneFocused] = useState(false);
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
-  const [joiningDateFocused, setJoiningDateFocused] = useState(false);
-  // Add success message state
-  const [successMsg, setSuccessMsg] = useState("");
+  const [dateFocused, setDateFocused] = useState(false);
+  const [toast, setToast] = useState(null);
+
+  /* ── handlers ── */
+  const showToast = (msg, duration = 3500) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), duration);
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    
-    // Clear error for this field
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
-    }
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
+  };
+
+  const handlePhoneChange = (e) => {
+    let val = e.target.value;
+    if (!val.startsWith('+91')) val = '+91' + val.replace(/^\+91/, '');
+    const digits = val.slice(3).replace(/\D/g, '').slice(0, 10);
+    setFormData(prev => ({ ...prev, phone: '+91' + digits }));
+    if (errors.phone) setErrors(prev => ({ ...prev, phone: '' }));
   };
 
   const handleAddSubject = () => {
-    if (formData.newSubject.trim() && !formData.subjects.includes(formData.newSubject.trim())) {
-      setFormData(prev => ({
-        ...prev,
-        subjects: [...prev.subjects, prev.newSubject.trim()],
-        newSubject: ''
-      }));
+    const sub = formData.newSubject.trim();
+    if (sub && !formData.subjects.includes(sub)) {
+      setFormData(prev => ({ ...prev, subjects: [...prev.subjects, sub], newSubject: '' }));
     }
   };
 
-  const handleRemoveSubject = (subjectToRemove) => {
-    setFormData(prev => ({
-      ...prev,
-      subjects: prev.subjects.filter(subject => subject !== subjectToRemove)
-    }));
-  };
+  const handleRemoveSubject = (s) =>
+    setFormData(prev => ({ ...prev, subjects: prev.subjects.filter(x => x !== s) }));
 
+  /* ── validation ── */
   const validateForm = () => {
-    const newErrors = {};
-    
-    // Required fields
-    if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
-    if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
-    if (!formData.email.trim()) newErrors.email = 'Email is required';
-    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email is invalid';
-
-    // Phone validation: +91, starts with 9/8/7, 10 digits (robust)
-    const phoneRaw = formData.phone.trim();
-    const phone = phoneRaw.replace(/[-\s()]/g, '');
-    // Debug: log processed phone and regex result
-    console.log('Phone input:', formData.phone, 'Processed:', phone, 'Regex test:', /^\+91[987]\d{9}$/.test(phone));
-    if (!phone) {
-      newErrors.phone = 'Phone number is required';
-    } else if (!/^\+91[987]\d{9}$/.test(phone)) {
-      newErrors.phone = 'Phone must start with +91 and be a valid 10-digit number starting with 9, 8, or 7';
-    }
-
-    if (!formData.joiningDate) newErrors.joiningDate = 'Joining date is required';
-
-    if (!formData.qualifications.trim()) newErrors.qualifications = 'Qualifications are required';
-
-    // Account setup validation
-    if (!formData.username.trim()) newErrors.username = 'Username is required';
-    if (!formData.password) newErrors.password = 'Password is required';
-    else if (formData.password.length < 8) newErrors.password = 'Password must be at least 8 characters';
-
-    return newErrors;
+    const e = {};
+    if (!formData.firstName.trim()) e.firstName = 'First name is required';
+    if (!formData.lastName.trim()) e.lastName = 'Last name is required';
+    if (!formData.email.trim()) e.email = 'Email is required';
+    else if (!/\S+@\S+\.\S+/.test(formData.email)) e.email = 'Invalid email address';
+    const phone = formData.phone.replace(/[-\s()]/g, '');
+    if (!phone) e.phone = 'Phone number is required';
+    else if (!/^\+91[987]\d{9}$/.test(phone)) e.phone = 'Must be +91 followed by 10 digits (starting 9/8/7)';
+    if (!formData.joiningDate) e.joiningDate = 'Joining date is required';
+    if (!formData.qualifications.trim()) e.qualifications = 'Qualifications are required';
+    if (!formData.username.trim()) e.username = 'Username is required';
+    // password is always auto-generated and valid — no manual validation needed
+    return e;
   };
 
+  /* ── submit ── */
   const handleSubmit = async (e) => {
     e.preventDefault();
     const validationErrors = validateForm();
-    
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
     }
-    
     setIsSubmitting(true);
 
-    const teacherData = {
+    const payload = {
       firstName: formData.firstName,
       lastName: formData.lastName,
       email: formData.email,
@@ -128,527 +135,422 @@ const AddTeacherForm = () => {
     };
 
     try {
-      const response = await fetch('http://127.0.0.1:5000/api/teacher/add', {
+      const res = await fetch('http://127.0.0.1:5000/api/teacher/add', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(teacherData),
+        body: JSON.stringify(payload),
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to add teacher');
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Failed to add teacher');
       }
-
-      setIsSubmitting(false);
-      // Custom success message instead of alert
+      const data = await res.json();
       setFormData({
-        firstName: '',
-        lastName: '',
-        email: '',
-        phone: '',
-        joiningDate: '',
-        employeeId: generateEmployeeId(),
-        subjects: [],
-        newSubject: '',
-        qualifications: '',
-        username: '',
-        password: '',
+        firstName: '', lastName: '', email: '', phone: '',
+        joiningDate: '', employeeId: generateEmployeeId(),
+        subjects: [], newSubject: '', qualifications: '',
+        username: '', password: generatePassword(),
       });
       setErrors({});
-      // Show custom success message
-      setSuccessMsg("Teacher registered successfully! 🎉");
-      setTimeout(() => setSuccessMsg(""), 3000);
-    } catch (error) {
-      console.error('Error adding teacher:', error);
+      if (data.emailWarning) {
+        showToast(`⚠️ Teacher created! Note: ${data.emailWarning}`, 6000);
+      } else {
+        showToast(`🎉 Teacher registered! A welcome email with credentials has been sent to ${payload.email}.`);
+      }
+    } catch (err) {
+      console.error(err);
+      showToast(`❌ ${err.message}`);
+    } finally {
       setIsSubmitting(false);
-      alert('Failed to add teacher. Please try again.');
     }
   };
 
-  const togglePasswordVisibility = () => {
-    setShowPassword(prev => !prev);
-  };
-
-  // Phone input handler: always keep "+91", allow only 10 digits after
-  const handlePhoneChange = (e) => {
-    let value = e.target.value;
-
-    // Always start with "+91"
-    if (!value.startsWith("+91")) {
-      value = "+91" + value.replace(/^\+91/, "");
-    }
-
-    // Remove non-digit characters after "+91"
-    let digits = value.slice(3).replace(/\D/g, "");
-    // Limit to 10 digits
-    digits = digits.slice(0, 10);
-
-    setFormData(prev => ({
-      ...prev,
-      phone: "+91" + digits
-    }));
-
-    if (errors.phone) {
-      setErrors(prev => ({
-        ...prev,
-        phone: ''
-      }));
-    }
-  };
-
+  /* ══════════════════════════════════════════
+     RENDER
+  ══════════════════════════════════════════ */
   return (
-    <div
-      className="add-teacher-bg"
-      style={{
-        minHeight: "100vh",
-        background: "linear-gradient(120deg, #f0f4f8 0%, #e3e9f3 100%)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "10px 0"
-      }}
-    >
-      <div
-        className="add-teacher-container"
-        style={{
-          width: "100%",
-          maxWidth: "900px",
-          margin: "0 auto",
-          position: "relative",
-        }}
-      >
-        {/* Back Button */}
-        <button
-          className="back-btn"
-          onClick={() => window.history.back()}
-          style={{
-            position: "absolute",
-            top: 24,
-            left: 32,
-            background: "#2563eb",
-            color: "#fff",
-            border: "none",
-            borderRadius: "6px",
-            padding: "8px 18px",
-            cursor: "pointer",
-            fontWeight: 600,
-            zIndex: 10,
-            boxShadow: "0 2px 8px rgba(37,99,235,0.10)",
-            transition: "background 0.2s, color 0.2s",
-          }}
-        >
-          ← Back
-        </button>
+    <div className="add-teacher-page">
 
-        <h1
-          style={{
-            marginTop: 24,
-            marginBottom: 4,
-            textAlign: "center",
-            fontWeight: 700,
-            fontSize: "1.5rem",
-            color: "#1e293b",
-            letterSpacing: "0.5px"
-          }}
-        >
-          Teacher Registration
-        </h1>
-        <p
-          style={{
-            textAlign: "center",
-            color: "#64748b",
-            marginBottom: 12,
-            fontSize: "1rem"
-          }}
-        >
-          Please fill in the details below to register a new teacher.
-        </p>
+      {/* ── Toast ── */}
+      {toast && (
+        <div className="at-toast-success" style={{
+          background: toast.startsWith('❌') ? '#fee2e2' : '#dcfce7',
+          borderColor: toast.startsWith('❌') ? '#dc2626' : '#16a34a',
+          borderLeft: `5px solid ${toast.startsWith('❌') ? '#dc2626' : '#16a34a'}`,
+          color: toast.startsWith('❌') ? '#991b1b' : '#166534',
+        }}>
+          <span style={{ flex: 1 }}>{toast}</span>
+          <button onClick={() => setToast(null)} style={{
+            background: 'none', border: 'none', cursor: 'pointer',
+            color: 'inherit', fontSize: 18, opacity: 0.7, padding: '0 0 0 8px',
+          }}>✕</button>
+        </div>
+      )}
 
-        <form
-          onSubmit={handleSubmit}
-          className="teacher-form"
-          style={{
-            border: "none",
-            borderRadius: "12px",
-            maxWidth: "900px",
-            margin: "0 auto",
-            padding: "16px 12px",
-            background: "#fff",
-            boxShadow: "0 4px 16px rgba(30,41,59,0.10)",
-            position: "relative",
-            minWidth: 0,
-          }}
-        >
-          {/* Show custom success message */}
-          {successMsg && (
-            <div
-              style={{
-                marginBottom: 8,
-                padding: "8px",
-                background: "#e0f7fa",
-                color: "#2563eb",
-                borderRadius: "6px",
-                textAlign: "center",
-                fontWeight: 600,
-                fontSize: "1em",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
-              }}
-            >
-              {successMsg}
-            </div>
-          )}
-
-          <div style={{ display: "flex", gap: "24px", flexWrap: "wrap" }}>
-            {/* Personal Information Section */}
-            <section className="form-section" style={{ flex: 1, minWidth: 320 }}>
-              <div className="section-header" style={{ marginBottom: 8 }}>
-                <h2 style={{
-                  fontSize: "1.1rem",
-                  fontWeight: 600,
-                  color: "#2563eb",
-                  marginBottom: 2,
-                  letterSpacing: "0.2px"
-                }}>Personal Information</h2>
-                <div className="section-divider" style={{
-                  height: 2,
-                  width: 32,
-                  background: "#2563eb",
-                  borderRadius: 2,
-                  marginBottom: 2
-                }}></div>
-              </div>
-              <div className="form-row" style={{ display: "flex", gap: "8px" }}>
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label htmlFor="firstName">First Name</label>
-                  <input
-                    type="text"
-                    id="firstName"
-                    name="firstName"
-                    value={formData.firstName}
-                    onChange={handleChange}
-                    placeholder=""
-                    className={errors.firstName ? 'error' : ''}
-                  />
-                  {errors.firstName && <span className="error-message">{errors.firstName}</span>}
-                </div>
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label htmlFor="lastName">Last Name</label>
-                  <input
-                    type="text"
-                    id="lastName"
-                    name="lastName"
-                    value={formData.lastName}
-                    onChange={handleChange}
-                    placeholder=""
-                    className={errors.lastName ? 'error' : ''}
-                  />
-                  {errors.lastName && <span className="error-message">{errors.lastName}</span>}
-                </div>
-              </div>
-              <div className="form-group">
-                <label htmlFor="email">Email Address</label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  onFocus={() => setEmailFocused(true)}
-                  onBlur={() => setEmailFocused(false)}
-                  placeholder=""
-                  className={errors.email ? 'error' : ''}
-                />
-                {emailFocused && (
-                  <span
-                    className="helper-text"
-                    style={{
-                      color: '#2563eb',
-                      fontSize: '1em',
-                      fontWeight: 600,
-                      marginTop: 4,
-                      display: 'block'
-                    }}
-                  >
-                    Enter a valid email address (e.g., name@example.com)
-                  </span>
-                )}
-                {errors.email && <span className="error-message">{errors.email}</span>}
-              </div>
-              <div className="form-row" style={{ display: "flex", gap: "8px" }}>
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label htmlFor="phone">Phone Number</label>
-                  <input
-                    type="tel"
-                    id="phone"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handlePhoneChange}
-                    onFocus={() => setPhoneFocused(true)}
-                    onBlur={() => setPhoneFocused(false)}
-                    placeholder="+91XXXXXXXXXX"
-                    className={errors.phone ? 'error' : ''}
-                    maxLength={13} // "+91" + 10 digits
-                    style={{
-                      letterSpacing: '0.05em'
-                    }}
-                  />
-                  {phoneFocused && (
-                    <span
-                      className="helper-text"
-                      style={{
-                        color: '#2563eb',
-                        fontSize: '1em',
-                        fontWeight: 600,
-                        marginTop: 4,
-                        display: 'block'
-                      }}
-                    >
-                      Format: +91 followed by 10 digits starting with 9, 8, or 7 (e.g., +919876543210)
-                    </span>
-                  )}
-                  {errors.phone && <span className="error-message">{errors.phone}</span>}
-                </div>
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label htmlFor="joiningDate">Joining Date</label>
-                  <input
-                    type="date"
-                    id="joiningDate"
-                    name="joiningDate"
-                    value={formData.joiningDate}
-                    onChange={handleChange}
-                    onFocus={() => setJoiningDateFocused(true)}
-                    onBlur={() => setJoiningDateFocused(false)}
-                    className={errors.joiningDate ? 'error' : ''}
-                    max={new Date().toISOString().split('T')[0]}
-                  />
-                  {joiningDateFocused && (
-                    <span
-                      className="helper-text"
-                      style={{
-                        color: '#2563eb',
-                        fontSize: '1em',
-                        fontWeight: 600,
-                        marginTop: 4,
-                        display: 'block'
-                      }}
-                    >
-                      Select the date the teacher joined (cannot be a future date)
-                    </span>
-                  )}
-                  {errors.joiningDate && <span className="error-message">{errors.joiningDate}</span>}
-                </div>
-              </div>
-            </section>
-
-            {/* Professional Details Section */}
-            <section className="form-section" style={{ flex: 1, minWidth: 320 }}>
-              <div className="section-header" style={{ marginBottom: 8 }}>
-                <h2 style={{
-                  fontSize: "1.1rem",
-                  fontWeight: 600,
-                  color: "#2563eb",
-                  marginBottom: 2,
-                  letterSpacing: "0.2px"
-                }}>Professional Details</h2>
-                <div className="section-divider" style={{
-                  height: 2,
-                  width: 32,
-                  background: "#2563eb",
-                  borderRadius: 2,
-                  marginBottom: 2
-                }}></div>
-              </div>
-              <div className="form-group">
-                <label htmlFor="employeeId">Employee ID</label>
-                <div className="employee-id-container">
-                  <input
-                    type="text"
-                    id="employeeId"
-                    name="employeeId"
-                    value={formData.employeeId}
-                    readOnly // make it read-only
-                    className="employee-id-input"
-                  />
-                  {/* Remove Generate New button */}
-                </div>
-              </div>
-              <div className="form-group">
-                <label>Subjects</label>
-                <div className="subjects-container">
-                  <div className="subjects-list">
-                    {formData.subjects.map(subject => (
-                      <span key={subject} className="subject-tag">
-                        {subject}
-                        <button 
-                          type="button" 
-                          className="remove-subject-btn"
-                          onClick={() => handleRemoveSubject(subject)}
-                        >
-                         
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                  <div className="add-subject-input">
-                    <input
-                      type="text"
-                      value={formData.newSubject}
-                      onChange={(e) => setFormData(prev => ({ ...prev, newSubject: e.target.value }))}
-                      placeholder="Add a subject"
-                      onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddSubject())}
-                    />
-                    <button 
-                      type="button" 
-                      className="add-subject-btn"
-                      onClick={handleAddSubject}
-                    >
-                      + Add Subject
-                    </button>
-                  </div>
-                </div>
-              </div>
-              <div className="form-group">
-                <label htmlFor="qualifications">Qualifications</label>
-                <textarea
-                  id="qualifications"
-                  name="qualifications"
-                  value={formData.qualifications}
-                  onChange={handleChange}
-                  placeholder=""
-                  rows="3"
-                  className={errors.qualifications ? 'error' : ''}
-                />
-                {errors.qualifications && <span className="error-message">{errors.qualifications}</span>}
-              </div>
-            </section>
-
-            {/* Account Setup Section */}
-            <section className="form-section" style={{ flex: 1, minWidth: 320 }}>
-              <div className="section-header" style={{ marginBottom: 8 }}>
-                <h2 style={{
-                  fontSize: "1.1rem",
-                  fontWeight: 600,
-                  color: "#2563eb",
-                  marginBottom: 2,
-                  letterSpacing: "0.2px"
-                }}>Account Setup</h2>
-                <div className="section-divider" style={{
-                  height: 2,
-                  width: 32,
-                  background: "#2563eb",
-                  borderRadius: 2,
-                  marginBottom: 2
-                }}></div>
-              </div>
-              <div className="form-group">
-                <label htmlFor="username">Username</label>
-                <input
-                  type="text"
-                  id="username"
-                  name="username"
-                  value={formData.username}
-                  onChange={handleChange}
-                  placeholder=""
-                  className={errors.username ? 'error' : ''}
-                />
-                {errors.username && <span className="error-message">{errors.username}</span>}
-              </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="password">Password</label>
-                  <div className="password-input-container">
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      id="password"
-                      name="password"
-                      value={formData.password}
-                      onChange={handleChange}
-                      onFocus={() => setPasswordFocused(true)}
-                      onBlur={() => setPasswordFocused(false)}
-                      placeholder=""
-                      className={errors.password ? 'error' : ''}
-                    />
-                    <button 
-                      type="button" 
-                      className="toggle-password-btn"
-                      onClick={togglePasswordVisibility}
-                    >
-                      {showPassword ? '👁' : '👁'}
-                    </button>
-                  </div>
-                  {passwordFocused && (
-                    <span
-                      className="helper-text"
-                      style={{
-                        color: '#2563eb',
-                        fontSize: '1em',
-                        fontWeight: 600,
-                        marginTop: 4,
-                        display: 'block'
-                      }}
-                    >
-                      Password must be at least 8 characters
-                    </span>
-                  )}
-                  {errors.password && <span className="error-message">{errors.password}</span>}
-                </div>
-              </div>
-            </section>
-          </div>
-
-          {/* Form Actions */}
-          <div className="form-actions" style={{
-            display: "flex",
-            justifyContent: "flex-end",
-            gap: "12px",
-            marginTop: 12
+      {/* ══ Sidebar ══ */}
+      <aside style={{
+        width: 220,
+        minHeight: '100vh',
+        background: '#1e293b',
+        color: '#fff',
+        position: 'fixed',
+        top: 0, left: 0,
+        zIndex: 1200,
+        boxShadow: '2px 0 8px rgba(30,41,59,0.08)',
+        display: 'flex',
+        flexDirection: 'column',
+        padding: '24px 12px',
+      }}>
+        {/* Logo */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 32 }}>
+          <div style={{
+            width: 40, height: 40, background: '#2563eb', borderRadius: 8,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff',
           }}>
-            <button
-              type="button"
-              className="cancel-btn"
-              onClick={() => window.history.back()}
-              style={{
-                background: "#f3f4f6",
-                color: "#374151",
-                border: "1px solid #e5e7eb",
-                borderRadius: "6px",
-                padding: "10px 22px",
-                fontWeight: 600,
-                cursor: "pointer",
-                transition: "background 0.2s, color 0.2s",
-              }}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="submit-btn"
-              disabled={isSubmitting}
-              style={{
-                background: isSubmitting ? "#93c5fd" : "#2563eb",
-                color: "#fff",
-                border: "none",
-                borderRadius: "6px",
-                padding: "10px 28px",
-                fontWeight: 700,
-                cursor: isSubmitting ? "not-allowed" : "pointer",
-                boxShadow: "0 2px 8px rgba(37,99,235,0.10)",
-                transition: "background 0.2s",
-                fontSize: "1.08rem"
-              }}
-            >
-              {isSubmitting ? (
-                <>
-                  <span className="spinner"></span>
-                  Adding Teacher...
-                </>
-              ) : (
-                'Add Teacher'
-              )}
-            </button>
+            <span className="material-symbols-outlined">school</span>
           </div>
-        </form>
-      </div>
+          <span style={{ fontWeight: 700, fontSize: 18 }}>EduAdmin</span>
+        </div>
+
+        {/* Nav */}
+        <nav style={{ flex: 1 }}>
+          {navItems.map(item => (
+            <button
+              key={item.path}
+              onClick={() => navigate(item.path)}
+              style={{
+                display: 'block', width: '100%',
+                padding: '10px 16px', borderRadius: 6,
+                color: '#fff', fontWeight: 600,
+                background: location.pathname === item.path ? '#2563eb' : 'transparent',
+                marginBottom: 8, border: 'none', cursor: 'pointer', textAlign: 'left',
+                boxShadow: location.pathname === item.path ? '0 2px 8px rgba(37,99,235,0.15)' : 'none',
+                transition: 'background 0.2s',
+              }}
+            >
+              {item.label}
+            </button>
+          ))}
+        </nav>
+
+        {/* Admin badge */}
+        <div style={{
+          marginTop: 'auto', display: 'flex', alignItems: 'center', gap: 10,
+          background: 'rgba(51,65,85,0.15)', borderRadius: 6, padding: '10px 12px',
+        }}>
+          <div style={{
+            width: 32, height: 32, background: '#10b981', borderRadius: '50%',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: '#fff', fontWeight: 700,
+          }}>A</div>
+          <div>
+            <div style={{ fontWeight: 600, fontSize: 14 }}>Admin User</div>
+            <div style={{ fontSize: 12, color: '#cbd5e1' }}>Super Admin</div>
+          </div>
+        </div>
+      </aside>
+
+      {/* ══ Main ══ */}
+      <main className="add-teacher-main">
+        <div className="add-teacher-inner">
+
+          {/* Page header */}
+          <div className="at-page-header">
+            <nav className="at-breadcrumb">
+              <a href="#" className="at-breadcrumb-link">Teachers</a>
+              <span className="material-symbols-outlined at-breadcrumb-sep">chevron_right</span>
+              <span className="at-breadcrumb-current">Add New Teacher</span>
+            </nav>
+            <h1>Register New Teacher</h1>
+            <p className="at-page-subtitle">
+              Fill in the details below to create a new teacher account and assign their profile.
+            </p>
+          </div>
+
+          {/* ── FORM ── */}
+          <form className="at-form" onSubmit={handleSubmit}>
+
+            {/* ╔══ Personal Information ══╗ */}
+            <div className="at-section">
+              <div className="at-section-header">
+                <div className="at-section-icon">
+                  <span className="material-symbols-outlined">badge</span>
+                </div>
+                <span className="at-section-title">Personal Information</span>
+              </div>
+              <div className="at-section-body">
+                <div className="at-grid">
+                  {/* First Name */}
+                  <div className="at-group">
+                    <label htmlFor="firstName">First Name</label>
+                    <input
+                      type="text" id="firstName" name="firstName"
+                      value={formData.firstName} onChange={handleChange}
+                      placeholder="e.g. Rahul"
+                      className={errors.firstName ? 'at-error' : ''}
+                    />
+                    {errors.firstName && <span className="at-error-msg">{errors.firstName}</span>}
+                  </div>
+
+                  {/* Last Name */}
+                  <div className="at-group">
+                    <label htmlFor="lastName">Last Name</label>
+                    <input
+                      type="text" id="lastName" name="lastName"
+                      value={formData.lastName} onChange={handleChange}
+                      placeholder="e.g. Sharma"
+                      className={errors.lastName ? 'at-error' : ''}
+                    />
+                    {errors.lastName && <span className="at-error-msg">{errors.lastName}</span>}
+                  </div>
+
+                  {/* Email */}
+                  <div className="at-group at-col-full">
+                    <label htmlFor="email">Email Address</label>
+                    <input
+                      type="email" id="email" name="email"
+                      value={formData.email} onChange={handleChange}
+                      placeholder="teacher@school.edu"
+                      onFocus={() => setEmailFocused(true)}
+                      onBlur={() => setEmailFocused(false)}
+                      className={errors.email ? 'at-error' : ''}
+                    />
+                    {emailFocused && !errors.email && (
+                      <span className="at-helper-text">Enter a valid email (e.g. name@example.com)</span>
+                    )}
+                    {errors.email && <span className="at-error-msg">{errors.email}</span>}
+                  </div>
+
+                  {/* Phone */}
+                  <div className="at-group">
+                    <label htmlFor="phone">Phone Number</label>
+                    <input
+                      type="tel" id="phone" name="phone"
+                      value={formData.phone} onChange={handlePhoneChange}
+                      placeholder="+91XXXXXXXXXX"
+                      onFocus={() => setPhoneFocused(true)}
+                      onBlur={() => setPhoneFocused(false)}
+                      maxLength={13}
+                      className={errors.phone ? 'at-error' : ''}
+                      style={{ letterSpacing: '0.04em' }}
+                    />
+                    {phoneFocused && !errors.phone && (
+                      <span className="at-helper-text">Format: +91 followed by 10 digits starting with 9, 8 or 7</span>
+                    )}
+                    {errors.phone && <span className="at-error-msg">{errors.phone}</span>}
+                  </div>
+
+                  {/* Joining Date */}
+                  <div className="at-group">
+                    <label htmlFor="joiningDate">Joining Date</label>
+                    <input
+                      type="date" id="joiningDate" name="joiningDate"
+                      value={formData.joiningDate} onChange={handleChange}
+                      onFocus={() => setDateFocused(true)}
+                      onBlur={() => setDateFocused(false)}
+                      max={new Date().toISOString().split('T')[0]}
+                      className={errors.joiningDate ? 'at-error' : ''}
+                    />
+                    {dateFocused && !errors.joiningDate && (
+                      <span className="at-helper-text">Select the date the teacher joined (cannot be a future date)</span>
+                    )}
+                    {errors.joiningDate && <span className="at-error-msg">{errors.joiningDate}</span>}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ╔══ Professional Details ══╗ */}
+            <div className="at-section">
+              <div className="at-section-header">
+                <div className="at-section-icon">
+                  <span className="material-symbols-outlined">work</span>
+                </div>
+                <span className="at-section-title">Professional Details</span>
+              </div>
+              <div className="at-section-body">
+                <div className="at-grid">
+                  {/* Employee ID */}
+                  <div className="at-group">
+                    <label htmlFor="employeeId">Employee ID</label>
+                    <div className="at-id-box">
+                      <input
+                        type="text" id="employeeId" name="employeeId"
+                        value={formData.employeeId}
+                        readOnly
+                      />
+                    </div>
+                  </div>
+
+                  {/* Qualifications */}
+                  <div className="at-group">
+                    <label htmlFor="qualifications">Qualifications</label>
+                    <textarea
+                      id="qualifications" name="qualifications"
+                      value={formData.qualifications} onChange={handleChange}
+                      placeholder="e.g. B.Ed, M.Sc Mathematics"
+                      className={errors.qualifications ? 'at-error' : ''}
+                      style={{ minHeight: 72 }}
+                    />
+                    {errors.qualifications && <span className="at-error-msg">{errors.qualifications}</span>}
+                  </div>
+
+                  {/* Subjects */}
+                  <div className="at-group at-col-full">
+                    <label>Subjects</label>
+                    <div className="at-subjects-wrap">
+                      {/* Tags */}
+                      {formData.subjects.length > 0 && (
+                        <div className="at-tags">
+                          {formData.subjects.map(s => (
+                            <span key={s} className="at-tag">
+                              {s}
+                              <button
+                                type="button" className="at-tag-remove"
+                                onClick={() => handleRemoveSubject(s)}
+                              >✕</button>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      {/* Input row */}
+                      <div className="at-subject-input-row">
+                        <input
+                          type="text"
+                          value={formData.newSubject}
+                          placeholder="Type a subject and press Add"
+                          onChange={e => setFormData(prev => ({ ...prev, newSubject: e.target.value }))}
+                          onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleAddSubject())}
+                        />
+                        <button type="button" className="at-add-subject-btn" onClick={handleAddSubject}>
+                          + Add
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ╔══ Account Setup ══╗ */}
+            <div className="at-section">
+              <div className="at-section-header">
+                <div className="at-section-icon">
+                  <span className="material-symbols-outlined">lock</span>
+                </div>
+                <span className="at-section-title">Account Setup</span>
+              </div>
+              <div className="at-section-body">
+                <div className="at-grid">
+                  {/* Username */}
+                  <div className="at-group">
+                    <label htmlFor="username">Username</label>
+                    <input
+                      type="text" id="username" name="username"
+                      value={formData.username} onChange={handleChange}
+                      placeholder="e.g. rahul.sharma"
+                      className={errors.username ? 'at-error' : ''}
+                    />
+                    {errors.username && <span className="at-error-msg">{errors.username}</span>}
+                  </div>
+
+                  {/* Password — auto-generated */}
+                  <div className="at-group">
+                    <label htmlFor="password">Initial Password</label>
+                    <div className="at-pwd-wrap">
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        id="password" name="password"
+                        value={formData.password}
+                        readOnly
+                        style={{
+                          letterSpacing: showPassword ? 'normal' : '0.12em',
+                          background: '#f1f5f9',
+                          cursor: 'default',
+                          paddingRight: '90px',
+                        }}
+                      />
+                      {/* Eye toggle */}
+                      <button
+                        type="button"
+                        className="at-pwd-toggle"
+                        onClick={() => setShowPassword(p => !p)}
+                        title={showPassword ? 'Hide password' : 'Show password'}
+                        style={{ right: 40 }}
+                      >
+                        <span className="material-symbols-outlined" style={{ fontSize: 20 }}>
+                          {showPassword ? 'visibility_off' : 'visibility'}
+                        </span>
+                      </button>
+                      {/* Regenerate button */}
+                      <button
+                        type="button"
+                        className="at-pwd-toggle"
+                        onClick={() => setFormData(prev => ({ ...prev, password: generatePassword() }))}
+                        title="Generate new password"
+                        style={{ right: 0 }}
+                      >
+                        <span className="material-symbols-outlined" style={{ fontSize: 20 }}>refresh</span>
+                      </button>
+                    </div>
+                    <small style={{ color: '#64748b', fontSize: '0.82em', marginTop: 3 }}>
+                      🔒 Auto-generated — will be sent to the teacher's email.
+                    </small>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ── Actions ── */}
+            <div className="at-form-actions">
+              <button
+                type="button" className="at-cancel-btn"
+                onClick={() => navigate('/admin')}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit" className="at-submit-btn"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <><span className="at-spinner" /> Adding Teacher…</>
+                ) : (
+                  <><span className="material-symbols-outlined" style={{ fontSize: 18 }}>person_add</span> Add Teacher</>
+                )}
+              </button>
+            </div>
+          </form>
+
+          {/* Help tip */}
+          <div className="at-help-tip">
+            <div className="at-help-icon">
+              <span className="material-symbols-outlined">info</span>
+            </div>
+            <div className="at-help-content">
+              <h4>Quick Tip</h4>
+              <p>The teacher account will be immediately active. You can manage subject assignments and class linking from the teacher profile later.</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <footer className="at-footer">
+          <div className="at-footer-content">
+            <div className="at-footer-left">
+              <span className="material-symbols-outlined at-footer-logo">school</span>
+              <span>EduAdmin System</span>
+              <span className="at-footer-divider">|</span>
+              <span>© 2024 Educational Platform. All rights reserved.</span>
+            </div>
+            <div className="at-footer-links">
+              <a href="#" className="at-footer-link">Privacy Policy</a>
+              <a href="#" className="at-footer-link">Terms of Service</a>
+              <a href="#" className="at-footer-link">Cookie Settings</a>
+            </div>
+          </div>
+        </footer>
+      </main>
     </div>
   );
 };

@@ -32,6 +32,11 @@ function Login() {
       const data = await res.json();
       if (res.ok) {
         setMsg("Login successful!");
+        if (isStudent && data.student) {
+          localStorage.setItem('studentUser', JSON.stringify(data.student));
+        } else if (isTeacher && data.teacher) {
+          localStorage.setItem('teacherUser', JSON.stringify(data.teacher));
+        }
         setTimeout(() => {
           if (isTeacher) {
             navigate("/teacher-dashboard");
